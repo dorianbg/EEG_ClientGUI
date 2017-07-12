@@ -211,6 +211,7 @@ public class ScreenAllUsers extends JPanel implements ListSelectionListener,Hado
             public void mouseClicked(MouseEvent mouseEvent) {
                 if (mouseEvent.getClickCount() == 2) {
                     JFrameSingleton.getMainScreen().setContentPane(new SettingsPanel("AllUsers",path));
+
                     JFrameSingleton.getMainScreen().invalidate();
                     JFrameSingleton.getMainScreen().validate();
                 }
