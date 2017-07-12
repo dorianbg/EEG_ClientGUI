@@ -1,6 +1,9 @@
-package cz.zcu.kiv;
+package cz.zcu.kiv.Deprecated;
 
-import cz.zcu.kiv.UploadScreens.UsersScreen;
+import cz.zcu.kiv.Const;
+import cz.zcu.kiv.DataUploading.ScreenAllUsers;
+import cz.zcu.kiv.JFrameSingleton;
+import cz.zcu.kiv.SettingsPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,20 +31,20 @@ import java.awt.event.MouseEvent;
  *
  ***********************************************************************************************************************
  *
- * cz.zcu.kiv.IntroJPanel, 2017/06/27 23:46 Dorian Beganovic
+ * cz.zcu.kiv.Deprecated.IntroJPanel, 2017/06/27 23:46 Dorian Beganovic
  *
  **********************************************************************************************************************/
 public class IntroJPanel extends JPanel{
 
     public IntroJPanel(){
-        JButton uploadButton = new JButton("Upload files");
 
+        JButton uploadButton = new JButton("Upload files");
         uploadButton.setPreferredSize(new Dimension(180,60));
         uploadButton.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
-                Util.getMainScreen().setContentPane(new UsersScreen());
-                Util.getMainScreen().invalidate();
-                Util.getMainScreen().validate();
+                JFrameSingleton.getMainScreen().setContentPane(new ScreenAllUsers());
+                JFrameSingleton.getMainScreen().invalidate();
+                JFrameSingleton.getMainScreen().validate();
             }
         });
 
@@ -49,16 +52,34 @@ public class IntroJPanel extends JPanel{
         analyzeButton.setPreferredSize(new Dimension(180,60));
         analyzeButton.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
-                System.out.println("2");
+
+            }
+        });
+
+        JButton settingsButton = new JButton("Settings");
+        settingsButton.setPreferredSize(new Dimension(180,60));
+        settingsButton.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent me) {
+                JFrameSingleton.getMainScreen().setContentPane(new SettingsPanel("",""));
+                JFrameSingleton.getMainScreen().invalidate();
+                JFrameSingleton.getMainScreen().validate();
+
             }
         });
 
 
-        setLayout(new GridBagLayout());
+        this.setLayout(new GridBagLayout());
 
-        this.add(uploadButton);
-        this.add(analyzeButton);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.anchor = GridBagConstraints.WEST;
 
+        this.add(uploadButton,gbc);
+        this.add(analyzeButton,gbc);
+        this.add(settingsButton,gbc);
+
+        // ranom import to initialize the Const class
+        String hadoopSeparator = Const.hadoopSeparator;
 
     }
 

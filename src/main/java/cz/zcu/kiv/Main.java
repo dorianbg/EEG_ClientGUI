@@ -1,6 +1,6 @@
-package cz.zcu.kiv.UploadScreens;
+package cz.zcu.kiv;
 
-import javax.swing.*;
+import java.io.IOException;
 
 /***********************************************************************************************************************
  *
@@ -23,8 +23,15 @@ import javax.swing.*;
  *
  ***********************************************************************************************************************
  *
- * ExperimentScreen, 2017/06/28 07:16 Dorian Beganovic
+ * cz.zcu.kiv.Main, 2017/06/27 23:46 Dorian Beganovic
  *
  **********************************************************************************************************************/
-public class ExperimentScreen extends JPanel{
+public class Main {
+    public static void main(String[] args){
+
+        JFrameSingleton.getMainScreen();
+
+    }
+
 }
+

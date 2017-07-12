@@ -1,10 +1,11 @@
-package cz.zcu.kiv;
+package cz.zcu.kiv.DataUploading;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 /***********************************************************************************************************************
  *
- * This file is part of the Spark_EEG_Analysis project
+ * This file is part of the EEG_WorkflowGUI project
 
  * ==========================================
  *
@@ -23,30 +24,18 @@ import javax.swing.*;
  *
  ***********************************************************************************************************************
  *
- * cz.zcu.kiv.Util, 2017/06/28 16:03 Dorian Beganovic
+ * HadoopScreen, 2017/07/01 15:38 Dorian Beganovic
  *
  **********************************************************************************************************************/
-public class Util {
+public interface HadoopScreen {
 
-    private static JFrame mainScreen = null;
-
-    private Util(){
-        // Exists only to defeat instantiation.
-    }
-
-    public static JFrame getMainScreen() {
-        if (mainScreen == null) {
-            mainScreen = new JFrame();
-            mainScreen.add(new IntroJPanel());
-            mainScreen.setSize(600,700);
-            mainScreen.setResizable(true);
-            mainScreen.setLocationByPlatform(true);
-            mainScreen.setLocationRelativeTo(null);
-            mainScreen.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-            mainScreen.setVisible(true);
-        }
-        return mainScreen;
-    }
-
+    public void initializePanel();
+    public String[][] getData();
+    public void setData(String[][] data);
+    public String getPath();
+    public JTable getJTable();
+    public void setJTable(JTable newTable);
+    public DefaultTableModel getTableModel();
+    public void setTableModel(DefaultTableModel tableModel);
 
 }

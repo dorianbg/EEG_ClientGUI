@@ -1,4 +1,6 @@
-package cz.zcu.kiv;
+package cz.zcu.kiv.Analysis;
+
+import javax.swing.*;
 
 /***********************************************************************************************************************
  *
@@ -21,17 +23,8 @@ package cz.zcu.kiv;
  *
  ***********************************************************************************************************************
  *
- * cz.zcu.kiv.MainScreen, 2017/06/27 23:46 Dorian Beganovic
+ * AnalysisPanel, 2017/07/11 19:58 Dorian Beganovic
  *
  **********************************************************************************************************************/
-public class MainScreen {
-    public static void main(String[] args) {
-        Util.getMainScreen();
-
-    }
-
-    private MainScreen(){
-
-    }
+public class AnalysisPanel extends JPanel {
 }
-
