@@ -328,6 +328,53 @@ public class HadoopModel {
 
 
 
+    private void copyFilesToDir(final File[] files, final FileSystem fs, final String destDirPath, final JList list, final HadoopScreen screen)
+            throws IOException {
+        SwingWorker<Void,String> swingWorker = new SwingWorker<Void, String>() {
+
+            @Override
+            protected Void doInBackground() throws Exception {
+                logger.info("Copying all the files from directory ");
+                for (File file :  files) {
+                    if(!file.getName().startsWith(".")){
+                        logger.info("SRC: " + file.getPath());
+                        logger.info("DEST: " + destDirPath + Const.hadoopSeparator + file.getName());
+                        fs.copyFromLocalFile(new Path(file.getPath()),new Path(destDirPath, file.getName()));
+                        String text = "SRC: " + file.getPath() + " \n" + "DEST: " + destDirPath + Const.hadoopSeparator + file.getName();
+                        publish(text);
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void process(List<String> chunks) {
+                String lastLine= chunks.get(chunks.size()-1);
+                String source = lastLine.split("\n")[0];
+                String dest = lastLine.split("\n")[1];
+                logger.info("Chunk" + lastLine);
+                DefaultListModel listModel = (DefaultListModel) list.getModel();
+                listModel.addElement(source);
+                listModel.addElement(dest);
+                listModel.addElement("-> Copied");
+            }
+
+            @Override
+            protected void done() {
+                list.revalidate();
+                DefaultListModel listModel = (DefaultListModel) list.getModel();
+                listModel.addElement("------> Done with copying");
+                logger.info("Done with copying data to hadoop...");
+            //    HadoopModel.getHadoopData(ScreenAllExperiments.this,fileTypeOption);
+            }
+        };
+        swingWorker.execute();
+    }
+
+
+
+
+
 
 
 

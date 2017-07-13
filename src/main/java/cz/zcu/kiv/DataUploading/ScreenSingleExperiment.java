@@ -149,7 +149,7 @@ public class ScreenSingleExperiment extends JPanel implements ListSelectionListe
 
         // ADD EXPERIMENT button
         JButton addButton = new JButton("UPLOAD FILES");
-        addButton.setPreferredSize(new Dimension(160,40));
+        addButton.setPreferredSize(new Dimension(120,40));
         addButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         addButton.addActionListener(new ActionListener() {
             @Override
@@ -192,8 +192,17 @@ public class ScreenSingleExperiment extends JPanel implements ListSelectionListe
             }
         });
 
+        JButton analyzeButton = new JButton("ANALYZE");
+        analyzeButton.setPreferredSize(new Dimension(120,40));
+        analyzeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        analyzeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("hi");
+            }
+        });
 
-        //Create a panel that uses BoxLayout.
+        //Create a panel that uses BoxLayout
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new GridBagLayout());
         buttonPane.add(backButton);
@@ -201,6 +210,10 @@ public class ScreenSingleExperiment extends JPanel implements ListSelectionListe
         buttonPane.add(new JSeparator(SwingConstants.VERTICAL));
         buttonPane.add(Box.createHorizontalStrut(5));
         buttonPane.add(addButton);
+        buttonPane.add(Box.createHorizontalStrut(5));
+        buttonPane.add(new JSeparator(SwingConstants.VERTICAL));
+        buttonPane.add(Box.createHorizontalStrut(5));
+        buttonPane.add(analyzeButton);
         buttonPane.add(Box.createHorizontalStrut(5));
         buttonPane.add(new JSeparator(SwingConstants.VERTICAL));
         buttonPane.add(Box.createHorizontalStrut(100));

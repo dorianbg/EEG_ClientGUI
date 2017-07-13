@@ -133,7 +133,7 @@ public class ScreenAllExperiments extends JPanel implements ListSelectionListene
                 deleteFile(
                         homeDirectory + Const.hadoopSeparator + path + Const.hadoopSeparator +  data[table.getSelectedRow()][0],
                         Const.getHadoopFileSystem() );
-                HadoopModel.getCachedHadoopData(ScreenAllExperiments.this,fileTypeOption);
+                HadoopModel.getHadoopData(ScreenAllExperiments.this,fileTypeOption);
                 JFrameSingleton.getMainScreen().invalidate();
                 JFrameSingleton.getMainScreen().validate();
             }
@@ -199,7 +199,9 @@ public class ScreenAllExperiments extends JPanel implements ListSelectionListene
                     jDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                     jDialog.setVisible(true);
 
-                    copyFilesToDir(filepath, fs, homeDirectory + Const.hadoopSeparator + path  + filename, list);
+                    File dir = new File(filepath);
+
+                    copyFilesToDir(dir.listFiles(), fs, homeDirectory + Const.hadoopSeparator + path  + filename, list);
 
                     HadoopModel.getHadoopData(ScreenAllExperiments.this,fileTypeOption);
                 }
@@ -250,15 +252,14 @@ public class ScreenAllExperiments extends JPanel implements ListSelectionListene
     }
 
 
-    public void copyFilesToDir(final String srcDirPath, final FileSystem fs, final String destDirPath, final JList list)
+    private void copyFilesToDir(final File[] files, final FileSystem fs, final String destDirPath, final JList list)
             throws IOException {
         SwingWorker<Void,String> swingWorker = new SwingWorker<Void, String>() {
 
             @Override
             protected Void doInBackground() throws Exception {
-                logger.info("Copying all the files from directory " + srcDirPath);
-                File dir = new File(srcDirPath);
-                for (File file : dir.listFiles()) {
+                logger.info("Copying all the files from directory ");
+                for (File file :  files) {
                     if(!file.getName().startsWith(".")){
                         logger.info("SRC: " + file.getPath());
                         logger.info("DEST: " + destDirPath + Const.hadoopSeparator + file.getName());

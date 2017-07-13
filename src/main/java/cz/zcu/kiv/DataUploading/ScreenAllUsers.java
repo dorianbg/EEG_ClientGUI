@@ -101,16 +101,36 @@ public class ScreenAllUsers extends JPanel implements ListSelectionListener,Hado
 
 
         JScrollPane listScrollPane = new JScrollPane(table);
+        // double click functionality
         listScrollPane.getViewport().getView().addMouseListener(new MouseAdapter() {
 
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
                 if (mouseEvent.getClickCount() == 2) {
                     logger.info("Double clicked");
+                    /*
                     JFrameSingleton.getMainScreen().setContentPane(new ScreenAllExperiments(data[table.getSelectedRow()][0]));
                     JFrameSingleton.getMainScreen().invalidate();
                     JFrameSingleton.getMainScreen().validate();
                     logger.info("Going into Hadoop folder: " +  uriPrefix+ homeDirectory +Const.hadoopSeparator +data[table.getSelectedRow()][0]);
+                    */
+                    /*
+                    JDialog jDialog = new JDialog();
+                    jDialog.add(new ScreenAllExperiments(data[table.getSelectedRow()][0]));
+                    jDialog.setSize(JFrameSingleton.getMainScreen().getSize());
+                    jDialog.setLocationRelativeTo(null);
+                    jDialog.setVisible(true);
+                    */
+                    JFrame frame = new JFrame();
+                    frame.add(new ScreenAllExperiments(data[table.getSelectedRow()][0]));
+                    frame.setSize(800, 700);
+                    frame.setResizable(true);
+                    frame.setLocationByPlatform(true);
+                    //frame.setLocation(JFrameSingleton.getMainScreen().getLocation().x-10,JFrameSingleton.getMainScreen().getLocation().y-10);
+                    frame.setLocationRelativeTo(null);
+                    frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                    frame.setVisible(true);
+
                 }
             }
         });
@@ -210,8 +230,8 @@ public class ScreenAllUsers extends JPanel implements ListSelectionListener,Hado
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
                 if (mouseEvent.getClickCount() == 2) {
-                    JFrameSingleton.getMainScreen().setContentPane(new SettingsPanel("AllUsers",path));
 
+                    JFrameSingleton.getMainScreen().setContentPane(new SettingsPanel("AllUsers",path));
                     JFrameSingleton.getMainScreen().invalidate();
                     JFrameSingleton.getMainScreen().validate();
                 }
