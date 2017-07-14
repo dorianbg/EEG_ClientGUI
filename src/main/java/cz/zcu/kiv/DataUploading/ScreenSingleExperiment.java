@@ -7,7 +7,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -20,10 +19,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.IOException;
 
 import static cz.zcu.kiv.Const.homeDirectory;
-import static cz.zcu.kiv.DataUploading.HadoopModel.deleteFile;
+import static cz.zcu.kiv.DataUploading.HadoopController.deleteFile;
 import static java.lang.System.out;
 
 /***********************************************************************************************************************
@@ -63,7 +61,7 @@ public class ScreenSingleExperiment extends JPanel implements ListSelectionListe
     // initialize contents of the table as empty
     private String[][] data = new String[0][5];
     // these are the predefined columns
-    private final String[] columns = HadoopModel.columns;
+    private final String[] columns = HadoopController.columns;
     // table model ie. the data stored in the table
     private DefaultTableModel tableModel;
     private JTable table = new JTable();
@@ -80,8 +78,8 @@ public class ScreenSingleExperiment extends JPanel implements ListSelectionListe
         this.path = path;
 
         // start the thread to get hadoop data
-        HadoopModel.getHadoopData(this,fileTypeOption);
-        HadoopModel.getCachedHadoopData(this,fileTypeOption);
+        HadoopController.getHadoopData(this,fileTypeOption);
+        HadoopController.getCachedHadoopData(this,fileTypeOption);
         initializePanel();
 
     }
@@ -138,7 +136,7 @@ public class ScreenSingleExperiment extends JPanel implements ListSelectionListe
                 deleteFile(
                         homeDirectory + Const.hadoopSeparator + path + Const.hadoopSeparator +  data[table.getSelectedRow()][0],
                         Const.getHadoopFileSystem() );
-                HadoopModel.getHadoopData(ScreenSingleExperiment.this,fileTypeOption);
+                HadoopController.getHadoopData(ScreenSingleExperiment.this,fileTypeOption);
                 JFrameSingleton.getMainScreen().invalidate();
                 JFrameSingleton.getMainScreen().validate();
             }
@@ -182,9 +180,9 @@ public class ScreenSingleExperiment extends JPanel implements ListSelectionListe
                     jDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                     jDialog.setVisible(true);
 
-                    copyFilesToDir(files, fs, homeDirectory + Const.hadoopSeparator + path, list);
+                    HadoopController.copyFilesToDir(files, fs, homeDirectory + Const.hadoopSeparator + path, list,ScreenSingleExperiment.this);
 
-                    HadoopModel.getHadoopData(ScreenSingleExperiment.this,fileTypeOption);
+                    HadoopController.getHadoopData(ScreenSingleExperiment.this,fileTypeOption);
                 }
                 catch (Exception ex) {
                     out.println(ex.getMessage());
@@ -233,53 +231,14 @@ public class ScreenSingleExperiment extends JPanel implements ListSelectionListe
                 }
             }
         });
+        JMenu jMenu2 = new JMenu("Current path: " + homeDirectory + Const.hadoopSeparator + path);
         jMenuBar.add(jMenu);
+        jMenuBar.add(jMenu2);
 
         add(jMenuBar,BorderLayout.PAGE_START);
         add(listScrollPane, BorderLayout.CENTER);
         add(buttonPane, BorderLayout.PAGE_END);
 
-    }
-
-    private void copyFilesToDir(final File[] files, final FileSystem fs, final String destDirPath, final JList list)
-            throws IOException {
-        SwingWorker<Void,String> swingWorker = new SwingWorker<Void, String>() {
-
-            @Override
-            protected Void doInBackground() throws Exception {
-                logger.info("Copying" + files.length + "files" );
-                for (File file : files) {
-                    if(!file.getName().startsWith(".")){
-                        logger.info("SRC: " + file.getPath());
-                        logger.info("DEST: " + destDirPath + Const.hadoopSeparator + file.getName());
-                        fs.copyFromLocalFile(new Path(file.getPath()),new Path(destDirPath, file.getName()));
-                        String text = "SRC: " + file.getPath() + " \n" + "DEST: " + destDirPath + Const.hadoopSeparator + file.getName();
-                        publish(text);
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            protected void process(java.util.List<String> chunks) {
-                String lastLine= chunks.get(chunks.size()-1);
-                String source = lastLine.split("\n")[0];
-                String dest = lastLine.split("\n")[1];
-                logger.info("Chunk" + lastLine);
-                DefaultListModel listModel = (DefaultListModel) list.getModel();
-                listModel.addElement(source);
-                listModel.addElement(dest);
-                listModel.addElement("-> Copied");
-            }
-
-            @Override
-            protected void done() {
-                list.revalidate();
-                logger.info("Done with copying data to hadoop...");
-                HadoopModel.getCachedHadoopData(ScreenSingleExperiment.this,fileTypeOption);
-            }
-        };
-        swingWorker.execute();
     }
 
     @Override

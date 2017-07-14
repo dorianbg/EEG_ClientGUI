@@ -1,16 +1,13 @@
 package cz.zcu.kiv;
 
-import cz.zcu.kiv.DataUploading.HadoopModel;
-import cz.zcu.kiv.DataUploading.ScreenAllExperiments;
+import cz.zcu.kiv.DataUploading.GenScreen;
 import cz.zcu.kiv.DataUploading.ScreenAllUsers;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.simple.JSONObject;
 
 import javax.swing.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.FileWriter;
 import java.io.IOException;
 
 /***********************************************************************************************************************
@@ -53,7 +50,7 @@ public class JFrameSingleton {
             mainScreen.addWindowListener(new WindowListener() {
                 @Override
                 public void windowOpened(WindowEvent e) {
-                    //new HadoopModel().cacheHadoopFiles(Const.homeDirectory);
+                    //new HadoopController().cacheHadoopFiles(Const.homeDirectory);
 
                 }
 
@@ -95,20 +92,22 @@ public class JFrameSingleton {
                 }
             });
 
-            SwingWorker<Void,Void> worker = new SwingWorker<Void, Void>() {
-                @Override
-                protected Void doInBackground() throws Exception {
-                    mainScreen.add(new ScreenAllUsers());
-                    mainScreen.setSize(800, 700);
-                    mainScreen.setResizable(true);
-                    mainScreen.setLocationByPlatform(true);
-                    mainScreen.setLocationRelativeTo(null);
-                    mainScreen.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-                    mainScreen.setVisible(true);
-                    return null;
-                }
-            };
-            worker.execute();
+            String cleanHomeDirectory;
+            if(!Const.homeDirectory.endsWith("/")){
+                cleanHomeDirectory = Const.homeDirectory + "/";
+            }
+            else {
+                cleanHomeDirectory = Const.homeDirectory;
+            }
+            logger.info("Starting the screen");
+            mainScreen.add(new GenScreen(getMainScreen(), cleanHomeDirectory));
+            mainScreen.setSize(800, 700);
+            mainScreen.setResizable(true);
+            mainScreen.setLocationByPlatform(true);
+            mainScreen.setLocationRelativeTo(null);
+            mainScreen.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            mainScreen.setVisible(true);
+            return null;
         }
         return mainScreen;
     }

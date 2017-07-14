@@ -10,6 +10,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
@@ -17,10 +19,11 @@ import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URI;
+import java.util.ArrayList;
 
 import static cz.zcu.kiv.Const.homeDirectory;
 import static cz.zcu.kiv.Const.uriPrefix;
-import static cz.zcu.kiv.DataUploading.HadoopModel.deleteFile;
+import static cz.zcu.kiv.DataUploading.HadoopController.deleteFile;
 import static java.lang.System.out;
 
 /***********************************************************************************************************************
@@ -54,7 +57,7 @@ public class ScreenAllUsers extends JPanel implements ListSelectionListener,Hado
     // initialize contents of the table as empty
     private String[][] data = new String[0][5];
     // these are the predefined columns
-    private final String[] columns = HadoopModel.columns;
+    private final String[] columns = HadoopController.columns;
     // table model ie. the data stored in the table
     private DefaultTableModel tableModel;
     private JTable table = new JTable();
@@ -68,8 +71,8 @@ public class ScreenAllUsers extends JPanel implements ListSelectionListener,Hado
         super(new BorderLayout());
 
         // start the thread to get hadoop data
-        HadoopModel.getHadoopData(this,fileTypeOption);
-        HadoopModel.getCachedHadoopData(this,fileTypeOption);
+        HadoopController.getHadoopData(this,fileTypeOption);
+        HadoopController.getCachedHadoopData(this,fileTypeOption);
         initializePanel();
     }
 
@@ -103,7 +106,6 @@ public class ScreenAllUsers extends JPanel implements ListSelectionListener,Hado
         JScrollPane listScrollPane = new JScrollPane(table);
         // double click functionality
         listScrollPane.getViewport().getView().addMouseListener(new MouseAdapter() {
-
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
                 if (mouseEvent.getClickCount() == 2) {
@@ -158,7 +160,7 @@ public class ScreenAllUsers extends JPanel implements ListSelectionListener,Hado
                 deleteFile(
                         homeDirectory + Const.hadoopSeparator + path + Const.hadoopSeparator +  data[table.getSelectedRow()][0],
                         Const.getHadoopFileSystem() );
-                HadoopModel.getHadoopData(ScreenAllUsers.this,fileTypeOption);
+                HadoopController.getHadoopData(ScreenAllUsers.this,fileTypeOption);
                 JFrameSingleton.getMainScreen().invalidate();
                 JFrameSingleton.getMainScreen().validate();
             }
@@ -181,7 +183,7 @@ public class ScreenAllUsers extends JPanel implements ListSelectionListener,Hado
 
         // ADD EXPERIMENT button
         JButton addButton = new JButton("ADD USER");
-        addButton.setPreferredSize(new Dimension(160,40));
+        addButton.setPreferredSize(new Dimension(120,40));
         addButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         addButton.addActionListener(new ActionListener() {
             @Override
@@ -195,11 +197,49 @@ public class ScreenAllUsers extends JPanel implements ListSelectionListener,Hado
                     logger.info("User wants to create a path " + uriPrefix+ homeDirectory +Const.hadoopSeparator +filename );
                     fs.mkdirs(new Path(uriPrefix+ homeDirectory +path + Const.hadoopSeparator +filename));
                     logger.info("Created a path " + uriPrefix+ homeDirectory +Const.hadoopSeparator +filename );
-                    HadoopModel.getHadoopData(ScreenAllUsers.this,fileTypeOption);
+                    HadoopController.getHadoopData(ScreenAllUsers.this,fileTypeOption);
                 }
                 catch (Exception ex) {
                     out.println(ex.getMessage());
                 }
+            }
+        });
+
+
+        final JTextField jTextField = new JTextField();
+        jTextField.setPreferredSize(new Dimension(200,30));
+        jTextField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        jTextField.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                update();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                update();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                update();
+            }
+
+            public void update() {
+                String query = jTextField.getText();
+
+                logger.info("Set the hadoop data (String[][]) matrix onto JTable ");
+
+                ArrayList<String[]> tempData = new ArrayList<String[]>();
+                for(String[] file : data){
+                    String filename = file[0];
+                    if (filename.toLowerCase().contains(query.toLowerCase())) {
+                        tempData.add(file);
+                    }
+                }
+                String[][] tempArray = new String[tempData.size()][5];
+                for(int i = 0; i < tempData.size(); i++){
+                    tempArray[i] = tempData.get(i);
+                }
+                getTableModel().setDataVector(tempArray,columns);
+                getTableModel().fireTableDataChanged();
+
+
             }
         });
 
@@ -214,6 +254,7 @@ public class ScreenAllUsers extends JPanel implements ListSelectionListener,Hado
         */
         buttonPane.add(addButton);
         buttonPane.add(Box.createHorizontalStrut(5));
+        buttonPane.add(jTextField);
         buttonPane.add(Box.createHorizontalStrut(5));
         buttonPane.add(new JSeparator(SwingConstants.VERTICAL));
         buttonPane.add(Box.createHorizontalStrut(5));
@@ -237,7 +278,9 @@ public class ScreenAllUsers extends JPanel implements ListSelectionListener,Hado
                 }
             }
         });
+        JMenu jMenu2 = new JMenu("Current path: " + homeDirectory + Const.hadoopSeparator + path);
         jMenuBar.add(jMenu);
+        jMenuBar.add(jMenu2);
 
         add(jMenuBar,BorderLayout.PAGE_START);
         add(listScrollPane, BorderLayout.CENTER);

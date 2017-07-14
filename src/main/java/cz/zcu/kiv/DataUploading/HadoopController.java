@@ -39,12 +39,12 @@ import static java.lang.System.out;
  *
  ***********************************************************************************************************************
  *
- * HadoopModel, 2017/06/28 13:37 Dorian Beganovic
+ * HadoopController, 2017/06/28 13:37 Dorian Beganovic
  *
  **********************************************************************************************************************/
-public class HadoopModel {
+public class HadoopController {
 
-    private static Log logger = LogFactory.getLog(HadoopModel.class);
+    private static Log logger = LogFactory.getLog(HadoopController.class);
 
     private static ArrayList<HadoopFile> arraylist= new ArrayList<HadoopFile>();
 
@@ -75,7 +75,7 @@ public class HadoopModel {
 
         String[][] data = null;
 
-        String uri = uriPrefix + homeDirectory + Const.hadoopSeparator +path;
+        String uri = uriPrefix + path;
         Configuration conf = new Configuration();
 
         try {
@@ -114,7 +114,7 @@ public class HadoopModel {
         //String uri = "webhdfs://147.228.63.46:50070/user/digitalAssistanceSystem/data/";
         String[][] data = null;
 
-        String uri = uriPrefix + homeDirectory + Const.hadoopSeparator +path;
+        String uri = uriPrefix + path;
         FileSystem fs = Const.getHadoopFileSystem();
         try {
 
@@ -208,14 +208,14 @@ public class HadoopModel {
                     if (file.isDirectory()) {
                         if (!file.getPath().split(desiredPath)[1].contains("/")) {
                             hadoopFiles.add(file);
-                            logger.info("Found folder " + file.getPath());
+                            logger.debug("Found folder " + file.getPath());
                         }
                     }
                 }
                 else if (fileTypeOption.equals("FILES")) {
                     if(!file.getPath().split(desiredPath)[1].contains("/")){
                         hadoopFiles.add(file);
-                        logger.info("Found file " + file.getPath());
+                        logger.debug("Found file " + file.getPath());
                     }
                 }
                 else {
@@ -298,7 +298,7 @@ public class HadoopModel {
         SwingWorker<String[][],Void> swingWorker = new SwingWorker<String[][], Void>() {
             @Override
             protected String[][] doInBackground() throws Exception {
-                return HadoopModel.getCachedHadoopData(Const.homeDirectory + Const.hadoopSeparator + screen.getPath(), option);
+                return HadoopController.getCachedHadoopData(screen.getPath(), option);
             }
             @Override
             protected void done() {
@@ -328,7 +328,7 @@ public class HadoopModel {
 
 
 
-    private void copyFilesToDir(final File[] files, final FileSystem fs, final String destDirPath, final JList list, final HadoopScreen screen)
+    public static void copyFilesToDir(final File[] files, final FileSystem fs, final String destDirPath, final JList list, final HadoopScreen screen)
             throws IOException {
         SwingWorker<Void,String> swingWorker = new SwingWorker<Void, String>() {
 
@@ -365,7 +365,7 @@ public class HadoopModel {
                 DefaultListModel listModel = (DefaultListModel) list.getModel();
                 listModel.addElement("------> Done with copying");
                 logger.info("Done with copying data to hadoop...");
-            //    HadoopModel.getHadoopData(ScreenAllExperiments.this,fileTypeOption);
+                HadoopController.getHadoopData(screen, "FILES");
             }
         };
         swingWorker.execute();
@@ -430,11 +430,14 @@ public class HadoopModel {
 
     @Test
     public void cacheFilesTest(){
-//        cacheHadoopFiles("/");
-        cacheHadoopFiles(Const.homeDirectory);
+        cacheHadoopFiles("/");
+        //cacheHadoopFiles(Const.homeDirectory);
     }
 
 
+    public int numCachedFiles(){
+        return arraylist.size();
+    }
 
 
 

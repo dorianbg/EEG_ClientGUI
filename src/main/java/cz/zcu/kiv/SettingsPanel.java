@@ -1,20 +1,21 @@
 package cz.zcu.kiv;
 
-import cz.zcu.kiv.DataUploading.HadoopModel;
-import cz.zcu.kiv.DataUploading.ScreenAllExperiments;
-import cz.zcu.kiv.DataUploading.ScreenAllUsers;
-import cz.zcu.kiv.DataUploading.ScreenSingleExperiment;
+import cz.zcu.kiv.DataUploading.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.simple.JSONObject;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.sql.Time;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 /***********************************************************************************************************************
  *
@@ -45,26 +46,15 @@ public class SettingsPanel extends JPanel {
     private static Log logger = LogFactory.getLog(SettingsPanel.class);
 
 
-    public SettingsPanel(final String source, final String path){
+    public SettingsPanel(String a, String b){
+
+    }
+    public SettingsPanel(final JFrame jFrameParent, final String source, final String path){
 
 
         JLabel label1 = new JLabel("Home directory  ");
         final JTextField textField1 = new JTextField(Const.homeDirectory);
         textField1.setPreferredSize(new Dimension(400,30));
-
-        // Possible JComboBox...
-        /*
-        String[][] data = HadoopModel.getCachedHadoopData("/", "FOLDERS");
-        String [] fileNames = new String[data.length];
-
-        for(int row = 0; row < data.length; row++)
-        {
-            fileNames[row] = data[row][0];
-        }
-
-        final JComboBox jComboBox = new JComboBox(fileNames);
-        jComboBox.setPreferredSize(new Dimension(400,30));
-        */
 
         final JLabel label2 = new JLabel("Remote URI        ");
         final JTextField textField2 = new JTextField(Const.remoteUriPrefix);
@@ -83,6 +73,61 @@ public class SettingsPanel extends JPanel {
             jCheckBox.setSelected(false);
         }
         jCheckBox.setPreferredSize(new Dimension(400,30));
+
+        JButton updateCache = new JButton("UPDATE CACHE");
+        updateCache.setPreferredSize(new Dimension(400,60));
+        updateCache.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+                SwingWorker<Void,Void> swingWorker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() throws Exception {
+                        logger.info("Updating hadoop data ...");
+                        HadoopController.cacheHadoopFiles("/");
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        jFrameParent.dispose();
+                        JFrameSingleton.getMainScreen().dispose();
+                        System.exit(0);
+                    }
+                };
+
+                swingWorker.execute();
+
+
+                final JProgressBar progressBar;
+                progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 5000);
+                progressBar.setStringPainted(true);
+                progressBar.setValue(0);
+                final Timer timer = new Timer(1000, null);
+                timer.addActionListener(new ActionListener() {
+                    int counter = 0;
+
+                    public void actionPerformed(ActionEvent evt) {
+                        counter++;
+                        progressBar.setValue(counter);
+                        if (counter > 5000) {
+                            JOptionPane.showMessageDialog(null, "Done!");
+                            timer.stop();
+                        }
+
+                    }
+                });
+                timer.start();
+                int res = JOptionPane.showOptionDialog(null, progressBar, "Caching hadoop files", JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE, null, null, null);
+
+                System.out.println(res);
+                if (res == 0){
+                   // swingWorker.cancel(true);
+                }
+            };
+        });
+
 
 
         JButton jButton = new JButton("SAVE");
@@ -143,14 +188,8 @@ public class SettingsPanel extends JPanel {
         jButton2.setPreferredSize(new Dimension(400,60));
         jButton2.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
-                if(source.equals("AllUsers")) {
-                    JFrameSingleton.getMainScreen().setContentPane(new ScreenAllUsers());
-                }
-                else if( source.equals("AllExperiments")) {
-                    JFrameSingleton.getMainScreen().setContentPane(new ScreenAllExperiments(path));
-                }
-                else if( source.equals("SingleExperiment")) {
-                    JFrameSingleton.getMainScreen().setContentPane(new ScreenSingleExperiment(path));
+                if( source.equals("GeneralScreen")) {
+                    jFrameParent.setContentPane(new GenScreen(jFrameParent,path));
                 }
                 else {
                     throw new IllegalArgumentException("please pass in the correct reference to previous screen");
@@ -191,7 +230,7 @@ public class SettingsPanel extends JPanel {
         add(panel4,gbc);
         add(jButton,gbc);
         add(jButton2,gbc);
-
+        add(updateCache,gbc);
 
 
 

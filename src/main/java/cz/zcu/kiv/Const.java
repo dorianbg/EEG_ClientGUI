@@ -68,6 +68,7 @@ public class Const {
     // 3. initialize all settings from the json files
     public static void initializeValues(){
         {
+            System.setProperty("hadoop.home.dir", "/");
             try{
                 JSONParser parser = new JSONParser();
                 Object obj = parser.parse(new FileReader("src/main/resources/settings.json".replace("/", Const.localSeparator)));
