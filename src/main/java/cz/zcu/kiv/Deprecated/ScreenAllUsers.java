@@ -1,6 +1,8 @@
-package cz.zcu.kiv.DataUploading;
+package cz.zcu.kiv.Deprecated;
 
 import cz.zcu.kiv.Const;
+import cz.zcu.kiv.DataUploading.HadoopController;
+import cz.zcu.kiv.DataUploading.HadoopScreen;
 import cz.zcu.kiv.JFrameSingleton;
 import cz.zcu.kiv.SettingsPanel;
 import org.apache.commons.logging.Log;

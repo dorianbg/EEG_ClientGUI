@@ -1,6 +1,8 @@
-package cz.zcu.kiv.DataUploading;
+package cz.zcu.kiv.Deprecated;
 
 import cz.zcu.kiv.Const;
+import cz.zcu.kiv.DataUploading.HadoopController;
+import cz.zcu.kiv.DataUploading.HadoopScreen;
 import cz.zcu.kiv.JFrameSingleton;
 import cz.zcu.kiv.SettingsPanel;
 import org.apache.commons.logging.Log;
@@ -48,7 +50,7 @@ import static java.lang.System.out;
  * ScreenSingleExperiment, 2017/06/28 07:16 Dorian Beganovic
  *
  **********************************************************************************************************************/
-public class ScreenSingleExperiment extends JPanel implements ListSelectionListener,HadoopScreen{
+public class ScreenSingleExperiment extends JPanel implements ListSelectionListener,HadoopScreen {
 
 
     /*

@@ -1,7 +1,6 @@
 package cz.zcu.kiv;
 
 import cz.zcu.kiv.DataUploading.GenScreen;
-import cz.zcu.kiv.DataUploading.ScreenAllUsers;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -92,15 +91,25 @@ public class JFrameSingleton {
                 }
             });
 
-            String cleanHomeDirectory;
-            if(!Const.homeDirectory.endsWith("/")){
-                cleanHomeDirectory = Const.homeDirectory + "/";
+
+            try {
+                for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                    if ("Nimbus".equals(info.getName())) {
+                        UIManager.setLookAndFeel(info.getClassName());
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                // If Nimbus is not available, fall back to cross-platform
+                try {
+                    UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+                } catch (Exception ex) {
+                    // not worth my time
+                }
             }
-            else {
-                cleanHomeDirectory = Const.homeDirectory;
-            }
+
             logger.info("Starting the screen");
-            mainScreen.add(new GenScreen(getMainScreen(), cleanHomeDirectory));
+            mainScreen.add(new GenScreen(getMainScreen(), Const.homeDirectory));
             mainScreen.setSize(800, 700);
             mainScreen.setResizable(true);
             mainScreen.setLocationByPlatform(true);
@@ -111,6 +120,5 @@ public class JFrameSingleton {
         }
         return mainScreen;
     }
-
 
 }

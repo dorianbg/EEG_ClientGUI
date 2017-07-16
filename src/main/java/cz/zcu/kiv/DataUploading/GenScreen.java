@@ -255,15 +255,13 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         createFolder.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Configuration conf = new Configuration();
-                FileSystem fs;
                 try {
                     String filename = JOptionPane.showInputDialog(null,
                             "How should the folder be called?", "Enter the folder name",  JOptionPane.QUESTION_MESSAGE);
-                    fs = FileSystem.get(URI.create(uriPrefix+ homeDirectory), conf);
-                    logger.info("User wants to create a path " + uriPrefix+ homeDirectory +Const.hadoopSeparator +filename );
-                    fs.mkdirs(new Path(uriPrefix+ homeDirectory +path + Const.hadoopSeparator +filename));
-                    logger.info("Created a path " + uriPrefix+ homeDirectory +Const.hadoopSeparator +filename );
+                    FileSystem fs = Const.getHadoopFileSystem();
+                    logger.info("User wants to create a path " +  path + Const.hadoopSeparator +filename );
+                    fs.mkdirs(new Path(  path + Const.hadoopSeparator + filename));
+                    logger.info("Created a path " +  path + Const.hadoopSeparator + filename );
                     HadoopController.getHadoopData(GenScreen.this,"FILES");
                 }
                 catch (Exception ex) {
@@ -277,19 +275,20 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         uploadDirectory.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Configuration conf = new Configuration();
-
                 try {
 
                     JFileChooser jFileChooser = new JFileChooser();
                     // user can only choose a directory !
+                    //jFileChooser.setCurrentDirectory(new java.io.File("."));
                     jFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                     jFileChooser.showSaveDialog(null);
+                    jFileChooser.setDialogTitle("Choose a directory to upload");
+
 
                     logger.info("Uploading a directory");
-                    //String filepath = jFileChooser.getSelectedFile().getAbsoluteFile().getAbsolutePath();
+                    String filepath = jFileChooser.getSelectedFile().getAbsolutePath();
                     // this is the filepath user chooses
-                    String filepath = jFileChooser.getCurrentDirectory().toString();
+                    //String filepath = jFileChooser.getCurrentDirectory().toString();
                     // name of the file the user chose
                     String filename = filepath.substring(filepath.lastIndexOf(Const.localSeparator));
 
@@ -422,32 +421,31 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
 
         // row1
 
-        analyzeButton.setPreferredSize(new Dimension(100,35));
+        analyzeButton.setPreferredSize(new Dimension(140,35));
         analyzeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        nextButton.setPreferredSize(new Dimension(100,35));
+        nextButton.setPreferredSize(new Dimension(140,35));
         nextButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        backButton.setPreferredSize(new Dimension(80,35));
+        backButton.setPreferredSize(new Dimension(120,35));
         backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        jTextField.setPreferredSize(new Dimension(180,35));
+        jTextField.setPreferredSize(new Dimension(220,35));
         jTextField.setMinimumSize(jTextField.getPreferredSize());
         jTextField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // row2
 
-        createFolder.setPreferredSize(new Dimension(120,35));
+        createFolder.setPreferredSize(new Dimension(160,35));
         createFolder.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        deleteButton.setPreferredSize(new Dimension(80,35));
+        deleteButton.setPreferredSize(new Dimension(120,35));
         deleteButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        deleteButton.setAlignmentY(Component.CENTER_ALIGNMENT);
 
-        uploadFiles.setPreferredSize(new Dimension(120,35));
+        uploadFiles.setPreferredSize(new Dimension(160,35));
         uploadFiles.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        uploadDirectory.setPreferredSize(new Dimension(140,35));
+        uploadDirectory.setPreferredSize(new Dimension(180,35));
         uploadDirectory.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 
@@ -461,37 +459,33 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         panelDown.setLayout(new FlowLayout());
 
         panelUp.add(backButton);
-        panelUp.add(Box.createHorizontalStrut(2));
+        panelUp.add(Box.createHorizontalStrut(5));
         panelUp.add(new JSeparator(SwingConstants.VERTICAL));
-        panelUp.add(Box.createHorizontalStrut(2));
+        panelUp.add(Box.createHorizontalStrut(5));
         panelUp.add(jTextField);
-        panelUp.add(Box.createHorizontalStrut(2));
+        panelUp.add(Box.createHorizontalStrut(5));
         panelUp.add(new JSeparator(SwingConstants.VERTICAL));
-        panelUp.add(Box.createHorizontalStrut(2));
+        panelUp.add(Box.createHorizontalStrut(5));
         panelUp.add(analyzeButton);
-        panelUp.add(Box.createHorizontalStrut(2));
+        panelUp.add(Box.createHorizontalStrut(5));
         panelUp.add(new JSeparator(SwingConstants.VERTICAL));
-        panelUp.add(Box.createHorizontalStrut(2));
+        panelUp.add(Box.createHorizontalStrut(5));
         panelUp.add(nextButton);
-        panelUp.add(Box.createHorizontalStrut(2));
 
 
-        panelDown.add(Box.createHorizontalStrut(2));
         panelDown.add(createFolder);
-        panelDown.add(Box.createHorizontalStrut(2));
+        panelDown.add(Box.createHorizontalStrut(5));
         panelDown.add(new JSeparator(SwingConstants.VERTICAL));
-        panelDown.add(Box.createHorizontalStrut(2));
-
+        panelDown.add(Box.createHorizontalStrut(5));
         panelDown.add(uploadFiles);
-        panelDown.add(Box.createHorizontalStrut(2));
+        panelDown.add(Box.createHorizontalStrut(5));
         panelDown.add(new JSeparator(SwingConstants.VERTICAL));
-        panelDown.add(Box.createHorizontalStrut(2));
+        panelDown.add(Box.createHorizontalStrut(5));
         panelDown.add(uploadDirectory);
-        panelDown.add(Box.createHorizontalStrut(2));
+        panelDown.add(Box.createHorizontalStrut(5));
         panelDown.add(new JSeparator(SwingConstants.VERTICAL));
-        panelDown.add(Box.createHorizontalStrut(2));
+        panelDown.add(Box.createHorizontalStrut(5));
         panelDown.add(deleteButton);
-        panelDown.add(Box.createHorizontalStrut(2));
 
 
         twoFloorPane.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
@@ -516,7 +510,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 }
             }
         });
-        JMenu jMenu2 = new JMenu("Current path: " + path);
+        JMenu jMenu2 = new JMenu("   Current path: " + path);
         jMenu1.setBorderPainted(true);
         jMenuBar.add(jMenu1);
         jMenuBar.add(jMenu2);

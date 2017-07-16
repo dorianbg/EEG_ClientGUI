@@ -90,9 +90,9 @@ public class SettingsPanel extends JPanel {
 
                     @Override
                     protected void done() {
-                        jFrameParent.dispose();
-                        JFrameSingleton.getMainScreen().dispose();
-                        System.exit(0);
+                        //jFrameParent.dispose();
+                        //JFrameSingleton.getMainScreen().dispose();
+                        //System.exit(0);
                     }
                 };
 
@@ -102,6 +102,7 @@ public class SettingsPanel extends JPanel {
                 final JProgressBar progressBar;
                 progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 5000);
                 progressBar.setStringPainted(true);
+                //progressBar.setString("Updating Hadoop cache");
                 progressBar.setValue(0);
                 final Timer timer = new Timer(1000, null);
                 timer.addActionListener(new ActionListener() {

@@ -65,7 +65,7 @@ public class HadoopController {
         }
     }
 
-    public static final String[] columns = {"File name", "Owner", "Size","Data modified", "Data Created"};
+    public static final String[] columns = {"File name", "Owner", "Size","Date modified", "Date Created"};
 
     public static String[] getColumns(){
         return columns;

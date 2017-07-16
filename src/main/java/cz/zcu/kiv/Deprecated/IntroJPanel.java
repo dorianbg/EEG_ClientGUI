@@ -1,7 +1,6 @@
 package cz.zcu.kiv.Deprecated;
 
 import cz.zcu.kiv.Const;
-import cz.zcu.kiv.DataUploading.ScreenAllUsers;
 import cz.zcu.kiv.JFrameSingleton;
 import cz.zcu.kiv.SettingsPanel;
 
