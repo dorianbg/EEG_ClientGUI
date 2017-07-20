@@ -10,9 +10,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
+import java.util.prefs.Preferences;
 
 /***********************************************************************************************************************
  *
@@ -41,19 +41,20 @@ import java.net.URI;
 public class Const {
 
     private static Log logger = LogFactory.getLog(Const.class);
-
+    private static Preferences preferences = Preferences.userRoot().node(Const.class.getName());
 
     // 0. Separators
     public static String localSeparator = "";
     static {
         if (SystemUtils.IS_OS_WINDOWS) {
             localSeparator = "\\";
+            System.setProperty("hadoop.home.dir", "c:\\winutils\\");
         }
         else {
             localSeparator = "/";
+            System.setProperty("hadoop.home.dir", "/");
         }
     }
-
     public static String hadoopSeparator = "/";
 
     // 1.
@@ -62,52 +63,30 @@ public class Const {
     public static String localUriPrefix;
     private static String useLocalMode;
 
-    // 2.
     public static  String homeDirectory;
 
-    // 3. initialize all settings from the json files
+    // 3. initialize all settings
     public static void initializeValues(){
         {
-            System.setProperty("hadoop.home.dir", "/");
-            try{
-                JSONParser parser = new JSONParser();
-                Object obj = parser.parse(new FileReader("src/main/resources/settings.json".replace("/", Const.localSeparator)));
-                JSONObject jsonObject = (JSONObject) obj;
+            homeDirectory = preferences.get("homeDirectory","/user/digitalAssistanceSystem/data/numbers");
+            localUriPrefix = preferences.get("localUriPrefix","hdfs://localhost:8020");
+            remoteUriPrefix = preferences.get("remoteUriPrefix","webhdfs://147.228.63.46:50070");
+            useLocalMode = preferences.get("useLocalMode","false");
 
-                homeDirectory = (String) jsonObject.get("homeDirectory");
-                localUriPrefix = (String) jsonObject.get("localUriPrefix");
-                remoteUriPrefix = (String) jsonObject.get("remoteUriPrefix");
-                useLocalMode = (String) jsonObject.get("useLocalMode");
-
-                logger.info("Successfully read the input file");
-                if(useLocalMode.equals("true")){
-                    uriPrefix= localUriPrefix;
-                }
-                else {
-                    uriPrefix= remoteUriPrefix;
-                }
+            logger.info("Successfully read the preferences");
+            if(useLocalMode.equals("true")){
+                uriPrefix = localUriPrefix;
             }
-            catch (Exception e) {
-                logger.info("Error when reading the input file, reverting to default settings");
-
-                remoteUriPrefix = "webhdfs://147.228.63.46:50070";
-                localUriPrefix = "hdfs://localhost:8020";
-                homeDirectory = "/user/digitalAssistanceSystem/data/numbers";
+            else{
                 uriPrefix = remoteUriPrefix;
-                useLocalMode = "false";
-
             }
-            logger.info("homeDirectory =" + homeDirectory );
-            logger.info("localUriPrefix =" + localUriPrefix );
-            logger.info("remoteUriPrefix =" + remoteUriPrefix );
-            logger.info("useLocalMode =" + useLocalMode );
-            logger.info("uriPrefix =" + uriPrefix);
+
+            logPreferences();
         }
     }
     static {
         initializeValues();
     }
-
 
 
     public static String getUseLocalMode(){
@@ -121,12 +100,7 @@ public class Const {
         else {
             uriPrefix= remoteUriPrefix;
         }
-        logger.info("Changed useLocalMode property; new settings are:");
-        logger.info("homeDirectory =" + homeDirectory );
-        logger.info("localUriPrefix =" + localUriPrefix );
-        logger.info("remoteUriPrefix =" + remoteUriPrefix );
-        logger.info("useLocalMode =" + useLocalMode );
-        logger.info("uriPrefix =" + uriPrefix);
+        logPreferences();
     }
 
 
@@ -141,6 +115,9 @@ public class Const {
             Configuration conf = new Configuration();
             conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
             conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+            conf.set("fs.webhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName());
+
+            conf.setBoolean("fs.automatic.close", true);
             try {
                 fileSystem = FileSystem.get(URI.create(uriPrefix+ homeDirectory), conf);
             } catch (IOException e) {
@@ -155,12 +132,19 @@ public class Const {
             Configuration conf = new Configuration();
             conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
             conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+            conf.set("fs.webhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName()); // a crazy fix
+
+            conf.setBoolean("fs.automatic.close", true);
             try {
                 Const.fileSystem = FileSystem.get(URI.create(uriPrefix+ homeDirectory), conf);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        logPreferences();
+    }
+
+    public static void logPreferences(){
         logger.info("homeDirectory =" + homeDirectory );
         logger.info("localUriPrefix =" + localUriPrefix );
         logger.info("remoteUriPrefix =" + remoteUriPrefix );

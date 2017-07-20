@@ -5,6 +5,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
@@ -49,7 +52,7 @@ public class JFrameSingleton {
             mainScreen.addWindowListener(new WindowListener() {
                 @Override
                 public void windowOpened(WindowEvent e) {
-                    //new HadoopController().cacheHadoopFiles(Const.homeDirectory);
+                    //new HadoopController().cacheHadoopFilesIntoSerialized(Const.homeDirectory);
 
                 }
 
@@ -57,12 +60,11 @@ public class JFrameSingleton {
                 // TODO - the cached state of hdfs should be also saved here
                 public void windowClosing(WindowEvent e) {
                     try {
-                        logger.info("FileSystem Closed");
                         Const.getHadoopFileSystem().close();
+                        logger.info("FileSystem Closed");
                     } catch (IOException e1) {
                         e1.printStackTrace();
-                    };
-
+                    }
                 }
 
                 @Override
@@ -109,13 +111,25 @@ public class JFrameSingleton {
             }
 
             logger.info("Starting the screen");
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            double width = screenSize.getWidth();
+            double height = screenSize.getHeight();
             mainScreen.add(new GenScreen(getMainScreen(), Const.homeDirectory));
-            mainScreen.setSize(800, 700);
+            mainScreen.setSize((int)width/2, (int)(height*3/4));
             mainScreen.setResizable(true);
             mainScreen.setLocationByPlatform(true);
             mainScreen.setLocationRelativeTo(null);
             mainScreen.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             mainScreen.setVisible(true);
+            KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
+            Action escapeAction = new AbstractAction() {
+                // close the frame when the user presses escape
+                public void actionPerformed(ActionEvent e) {
+                    mainScreen.dispose();
+                }
+            };
+            mainScreen.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
+            mainScreen.getRootPane().getActionMap().put("ESCAPE", escapeAction);
             return null;
         }
         return mainScreen;

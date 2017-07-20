@@ -3,7 +3,6 @@ package cz.zcu.kiv;
 import cz.zcu.kiv.DataUploading.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.simple.JSONObject;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,11 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.sql.Time;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
+import java.util.prefs.Preferences;
 
 /***********************************************************************************************************************
  *
@@ -44,6 +39,7 @@ import java.util.concurrent.ExecutionException;
 public class SettingsPanel extends JPanel {
 
     private static Log logger = LogFactory.getLog(SettingsPanel.class);
+    private static Preferences preferences = Preferences.userRoot().node(Const.class.getName());
 
 
     public SettingsPanel(String a, String b){
@@ -77,55 +73,49 @@ public class SettingsPanel extends JPanel {
         JButton updateCache = new JButton("UPDATE CACHE");
         updateCache.setPreferredSize(new Dimension(400,60));
         updateCache.addMouseListener(new MouseAdapter() {
+
             @Override
             public void mouseReleased(MouseEvent e) {
+
+                final JProgressBar progressBar;
+                progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 5000);
 
                 SwingWorker<Void,Void> swingWorker = new SwingWorker<Void, Void>() {
                     @Override
                     protected Void doInBackground() throws Exception {
                         logger.info("Updating hadoop data ...");
-                        HadoopController.cacheHadoopFiles("/");
+                        HadoopController.cacheHadoopFilesIntoPreferences("/");
+                        HadoopController.initializeHadoopCacheFromPreferences();
                         return null;
                     }
 
                     @Override
                     protected void done() {
-                        //jFrameParent.dispose();
-                        //JFrameSingleton.getMainScreen().dispose();
-                        //System.exit(0);
+                        JOptionPane.showMessageDialog(null, "Done, please close these windows !");
                     }
                 };
 
                 swingWorker.execute();
 
-
-                final JProgressBar progressBar;
-                progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 5000);
                 progressBar.setStringPainted(true);
                 //progressBar.setString("Updating Hadoop cache");
                 progressBar.setValue(0);
-                final Timer timer = new Timer(1000, null);
+                final Timer timer = new Timer(10, null);
                 timer.addActionListener(new ActionListener() {
                     int counter = 0;
 
                     public void actionPerformed(ActionEvent evt) {
                         counter++;
                         progressBar.setValue(counter);
-                        if (counter > 5000) {
-                            JOptionPane.showMessageDialog(null, "Done!");
+                        if (counter > 10) {
                             timer.stop();
                         }
-
                     }
                 });
                 timer.start();
-                int res = JOptionPane.showOptionDialog(null, progressBar, "Caching hadoop files", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.showOptionDialog(null, progressBar, "Caching hadoop files", JOptionPane.DEFAULT_OPTION,
                         JOptionPane.INFORMATION_MESSAGE, null, null, null);
 
-                System.out.println(res);
-                if (res == 0){
-                   // swingWorker.cancel(true);
-                }
             };
         });
 
@@ -160,22 +150,12 @@ public class SettingsPanel extends JPanel {
                     }
                 }
 
-                JSONObject obj = new JSONObject();
-                obj.put("homeDirectory", Const.homeDirectory);
-                obj.put("localUriPrefix", Const.localUriPrefix);
-                obj.put("remoteUriPrefix", Const.remoteUriPrefix);
-                obj.put("useLocalMode",Const.getUseLocalMode());
+                preferences.put("homeDirectory", Const.homeDirectory);
+                preferences.put("localUriPrefix", Const.localUriPrefix);
+                preferences.put("remoteUriPrefix", Const.remoteUriPrefix);
+                preferences.put("useLocalMode",Const.getUseLocalMode());
+                logger.info("Settings saved");
 
-                FileWriter file = null;
-                try {
-                    file = new FileWriter("src/main/resources/settings.json".replace("/",Const.localSeparator));
-                    file.write(obj.toJSONString());
-                    file.flush();
-                    file.close();
-                } catch (IOException e2) {
-                    e2.printStackTrace();
-                }
-                logger.info("Settings saved to src/main/resources/settings.json");
 
                 Const.initializeValues();
                 Const.changeFileSystem();

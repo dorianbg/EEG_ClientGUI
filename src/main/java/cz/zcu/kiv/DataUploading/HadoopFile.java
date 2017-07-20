@@ -2,6 +2,7 @@ package cz.zcu.kiv.DataUploading;
 
 import cz.zcu.kiv.Const;
 import org.apache.hadoop.fs.FileStatus;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -28,9 +29,10 @@ import java.text.SimpleDateFormat;
  *
  ***********************************************************************************************************************
  *
- * HadopFile, 2017/06/30 15:30 Dorian Beganovic
+ * HadoopFile, 2017/06/30 15:30 Dorian Beganovic
  *
  **********************************************************************************************************************/
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class HadoopFile implements Serializable {
 
     private String path;
@@ -38,24 +40,25 @@ public class HadoopFile implements Serializable {
     private String owner;
     private String size;
     private String dateModified;
-    private String dateCreated;
     private boolean isDirectory;
+
+    public HadoopFile(){
+
+    }
+
     public HadoopFile(FileStatus file) throws IOException {
         this.fileName= file.getPath().toString().substring(file.getPath().toString().lastIndexOf(Const.hadoopSeparator)).replaceFirst(Const.hadoopSeparator,"");
         this.path = file.getPath().toString();
         this.owner= file.getOwner();
-        this.size= Long.toString(Const.getHadoopFileSystem().getContentSummary(file.getPath()).getSpaceConsumed() / (1024 * 1024)) + " mb";
+        this.size= Long.toString(file.getLen() / 1024 ) + " kb";
         this.dateModified= new SimpleDateFormat("dd.MM.yyyy HH:mm").format(new java.util.Date(file.getModificationTime()));
-        this.dateCreated= new SimpleDateFormat("dd.MM.yyyy HH:mm").format(new java.util.Date(file.getAccessTime()));
         this.isDirectory = file.isDirectory();
     }
 
-    public boolean isDirectory() {
-        return isDirectory;
-    }
+    public String getFileName() { return fileName; }
 
-    public String getFileName() {
-        return fileName;
+    public String getPath() {
+        return path;
     }
 
     public String getOwner() {
@@ -70,11 +73,9 @@ public class HadoopFile implements Serializable {
         return dateModified;
     }
 
-    public String getDateCreated() {
-        return dateCreated;
+    public boolean isDirectory() {
+        return isDirectory;
     }
 
-    public String getPath() {
-        return path;
-    }
+
 }

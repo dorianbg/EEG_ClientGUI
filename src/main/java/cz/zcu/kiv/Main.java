@@ -1,5 +1,6 @@
 package cz.zcu.kiv;
 
+import java.awt.*;
 import java.io.IOException;
 
 /***********************************************************************************************************************
@@ -28,8 +29,14 @@ import java.io.IOException;
  **********************************************************************************************************************/
 public class Main {
     public static void main(String[] args){
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrameSingleton.getMainScreen();
+            }
+        });
 
-        JFrameSingleton.getMainScreen();
+
 
     }
 
