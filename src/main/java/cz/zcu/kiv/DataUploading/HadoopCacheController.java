@@ -1,13 +1,14 @@
-package cz.zcu.kiv;
+package cz.zcu.kiv.DataUploading;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-import cz.zcu.kiv.DataUploading.HadoopFile;
-import cz.zcu.kiv.DataUploading.HadoopScreen;
+import cz.zcu.kiv.Const;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -16,15 +17,11 @@ import org.junit.Test;
 
 import javax.swing.*;
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-
-import static cz.zcu.kiv.Const.uriPrefix;
-import static java.lang.System.out;
 
 /***********************************************************************************************************************
  *
@@ -47,20 +44,21 @@ import static java.lang.System.out;
  *
  ***********************************************************************************************************************
  *
- * HadoopController, 2017/06/28 13:37 Dorian Beganovic
+ * HadoopCacheController, 2017/07/22 13:53 dbg
  *
  **********************************************************************************************************************/
-public class HadoopController {
+public class HadoopCacheController {
 
-    private static Log logger = LogFactory.getLog(HadoopController.class);
+    private static Log logger = LogFactory.getLog(HadoopCacheController.class);
     private static Preferences preferences = Preferences.userRoot().node(Const.class.getName());
     private static ArrayList<HadoopFile> cachedHadoopFilesList = new ArrayList<HadoopFile>();
-    public static final String[] columns = {"File name", "Owner", "Size","Date modified"};
+    private static final String[] columns = {"File name", "Owner", "Size","Date modified"};
 
 
-    // initialize the cachedHadoopFilesList
-    /*
-    static {
+    /**
+     * if the preferences are not filled with cached hadoop files, then load them from the serialized file
+     */
+    private static void initializeCache(){
         int count = 0;
         try {
             for (String key : preferences.keys()){
@@ -70,11 +68,9 @@ public class HadoopController {
             }
             logger.info("hadoopCache keys count is: " + count);
             if(count <= 10){
-                initializeHadoopCacheFromSerialized();
+                initializePreferencesFromSerialized();
             }
-            else {
-                initializeHadoopCacheFromPreferences();
-            }
+            initializeHadoopCacheFromPreferences();
 
         } catch (BackingStoreException e) {
             e.printStackTrace();
@@ -88,9 +84,13 @@ public class HadoopController {
             e.printStackTrace();
         }
     }
-    */
 
-    public static void initializeHadoopCacheFromSerialized() throws IOException, ClassNotFoundException {
+    /**
+     * reads the ArrayList of HadoopFiles from the serialized store and loads it into preferences
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    private static void initializePreferencesFromSerialized() throws IOException, ClassNotFoundException {
         logger.info("loading hadoopCache from serialized file");
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         InputStream is = classloader.getResourceAsStream("hadoopFilesList.obj");
@@ -120,7 +120,12 @@ public class HadoopController {
     }
 
 
-    public static void initializeHadoopCacheFromPreferences() throws IOException, BackingStoreException {
+    /**
+     * loads the ArrayList of HadoopFiles from the Java Preferences
+     * @throws IOException
+     * @throws BackingStoreException
+     */
+    private static void initializeHadoopCacheFromPreferences() throws IOException, BackingStoreException {
         int count=0;
         for (String key : preferences.keys()){
             if (key.startsWith("hadoopCache")){
@@ -139,6 +144,11 @@ public class HadoopController {
         cachedHadoopFilesList = mapper.readValue(jsonValue.toString(), mapper.getTypeFactory().constructCollectionType(ArrayList.class, HadoopFile.class));
     }
 
+    /**
+     * recursively visits all folders starting from a path
+     * @param baseDirectoryPath the starting path
+     * @return return the list of files found in the path
+     */
     private static ArrayList<HadoopFile> recursivelyListFilesInDirectory(String baseDirectoryPath){
         ArrayList<HadoopFile> paths = new ArrayList<HadoopFile>(100);
         FileSystem fs = Const.getHadoopFileSystem();
@@ -160,12 +170,17 @@ public class HadoopController {
         return paths;
     }
 
+    /**
+     * uses the Hadoop Java API to list all the files
+     * @param baseDirectoryPath look for files in this folder
+     * @return list of HadoopFile's
+     */
     public static List<HadoopFile> getHadoopFilesListFromJava(String baseDirectoryPath){
         return recursivelyListFilesInDirectory(baseDirectoryPath);
     }
 
     /**
-     *
+     * connects to the REST server to get the files
      * @param baseDirectoryPath
      * @return
      */
@@ -252,7 +267,7 @@ public class HadoopController {
 
     /**
      * saves the list of HadoopFiles into a serialized file (object)
-     * @param baseDirectoryPath
+     * @param baseDirectoryPath caches the files in sub-folders of this path
      */
     public static void cacheHadoopFilesIntoSerialized(String baseDirectoryPath){
         ArrayList<HadoopFile> paths = recursivelyListFilesInDirectory(baseDirectoryPath);
@@ -274,93 +289,22 @@ public class HadoopController {
 
 
     /**
-     * Used to update the JTable model with live Hadoop data
-     * @param screen
-     */
-    public static void getHadoopData(final HadoopScreen screen){
-        SwingWorker<String[][],Void> swingWorker = new SwingWorker<String[][], Void>() {
-            @Override
-            protected String[][] doInBackground() throws Exception {
-
-                String path = screen.getPath();
-                logger.info("Getting hadoop data in background...");
-                String[][] data = null;
-
-                String uri = uriPrefix + path;
-                FileSystem fs = Const.getHadoopFileSystem();
-                try {
-
-                    FileStatus[] files = fs.listStatus(new Path(uri));
-
-                    data = new String[files.length][columns.length];
-
-                    for (int i = 0; i < files.length; i++){
-                        // 1. filename
-                        data[i][0]= files[i].getPath().toString().substring(files[i].getPath().toString().lastIndexOf(Const.hadoopSeparator)).replaceFirst(Const.hadoopSeparator,"");
-                        // 2. fileowner
-                        data[i][1]= files[i].getOwner();
-                        // 3. folder/file size
-                        data[i][2] = Long.toString(files[i].getLen()/ 1024 ) + " kb";
-                        //data[i][2]= Long.toString(fs.getContentSummary(files[i].getPath()).getSpaceConsumed() / (1024 * 1024)) + " mb";
-                        // data modified
-                        data[i][3]= new SimpleDateFormat("dd.MM.yyyy").format(new java.util.Date(files[i].getModificationTime()));
-                        // date accessed
-                        //data[i][4]= new SimpleDateFormat("dd.MM.yyyy").format(new java.util.Date(files[i].getAccessTime()));
-                    }
-
-                }
-                catch (Exception e){
-                    out.println(e.getMessage());
-                }
-                return data;
-            }
-
-            @Override
-            protected void done() {
-                logger.info("Done with getting hadoop data in background...");
-                logger.info("Created the data (String[][] matrix) for hadoop data");
-
-                String[][] fullData =null;
-                try {
-                    fullData = get();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                }
-
-
-                final int[] sel = screen.getJTable().getSelectedRows();
-
-                screen.setData(fullData);
-                logger.info("Set the hadoop data (String[][]) matrix onto JTable ");
-
-                screen.getTableModel().setDataVector(fullData,columns);
-                screen.getTableModel().fireTableDataChanged();
-
-                // re-apply selected rows in jtable
-                for (int i=0; i<sel.length; i++){
-                    screen.getJTable().getSelectionModel().addSelectionInterval(sel[i], sel[i]);
-                }
-            }
-        };
-        swingWorker.execute();
-    }
-
-    /**
-     * Used to filter list (cache) of current Hadoop files
-     * @param screen
+     * Filter the list (cache) of current Hadoop files
+     * @param screen updates the data shown on screen
      */
     public static void getCachedHadoopData(final HadoopScreen screen){
         SwingWorker<String[][],Void> swingWorker = new SwingWorker<String[][], Void>() {
             @Override
             protected String[][] doInBackground() throws Exception {
+                // 1. get the current path and clean it
                 String desiredPath = screen.getPath();
 
                 if(!desiredPath.endsWith("/")){
                     desiredPath+="/";
                 }
                 logger.info("Desired path is " + desiredPath);
+
+                // 2. add cached paths that match the current path
                 String[][] data = null;
 
                 List<HadoopFile> hadoopFiles = new ArrayList<HadoopFile>(50);
@@ -376,7 +320,8 @@ public class HadoopController {
                         logger.debug("Failed to split the file: " + file.getPath() + " based on " + desiredPath);
                     }
                 }
-                // populate the data matrix
+
+                // 3. populate the data matrix
                 data = new String[hadoopFiles.size()][4];
                 for (int i = 0; i < hadoopFiles.size(); i++) {
                     HadoopFile file = hadoopFiles.get(i);
@@ -410,80 +355,12 @@ public class HadoopController {
                     screen.setData(fullData);
                     screen.getTableModel().setDataVector(fullData,columns);
                     screen.getTableModel().fireTableDataChanged();
-
                 }
             }
         };
         swingWorker.execute();
     }
 
-
-    /**
-     * recursively copies from path A to path B preserving the internal structure
-     * @param files
-     * @param fs
-     * @param destDirPath
-     * @param list
-     * @param screen
-     * @throws IOException
-     */
-    public static void copyFilesToDir(final File[] files, final FileSystem fs, final String destDirPath, final JList list, final HadoopScreen screen)
-            throws IOException {
-        SwingWorker<Void,String> swingWorker = new SwingWorker<Void, String>() {
-
-            @Override
-            protected Void doInBackground() throws Exception {
-                logger.info("Copying all the files from directory ");
-                for (File file :  files) {
-                    if(!file.getName().startsWith(".")){
-                        logger.info("SRC: " + file.getPath());
-                        logger.info("DEST: " + destDirPath + Const.hadoopSeparator + file.getName());
-                        fs.copyFromLocalFile(new Path(file.getPath()),new Path(destDirPath, file.getName()));
-                        String text = "SRC: " + file.getPath() + " \n" + "DEST: " + destDirPath + Const.hadoopSeparator + file.getName();
-                        publish(text);
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            protected void process(List<String> chunks) {
-                String lastLine= chunks.get(chunks.size()-1);
-                String source = lastLine.split("\n")[0];
-                String dest = lastLine.split("\n")[1];
-                logger.info("Chunk" + lastLine);
-                DefaultListModel listModel = (DefaultListModel) list.getModel();
-                listModel.addElement(source);
-                listModel.addElement(dest);
-                listModel.addElement("-> Copied");
-            }
-
-            @Override
-            protected void done() {
-                list.revalidate();
-                DefaultListModel listModel = (DefaultListModel) list.getModel();
-                listModel.addElement("------> Done with copying");
-                logger.info("Done with copying data to hadoop...");
-                HadoopController.getHadoopData(screen);
-            }
-        };
-        swingWorker.execute();
-    }
-
-    /**
-     * recursively deletes a path
-     * @param filePath
-     * @param fs
-     */
-    public static void deleteFile(String filePath, FileSystem fs)  {
-        logger.info("Deleting file " + filePath);
-        try {
-            // the false flags means you can only delete files and not folders
-            fs.delete(new Path(filePath),true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
 
     @Test
@@ -497,4 +374,34 @@ public class HadoopController {
         cacheHadoopFilesIntoSerialized("/user/digitalAssistanceSystem/data/numbers");
 
     }
+
+    @Test
+    public void testReceiveListOfStrings() throws Exception {
+        Client client = Client.create();
+        WebResource webResource = client.resource("http://localhost:8080/");
+
+        String basePath = "hdfs/";
+        String pathVariable = "/"; //root of the fs
+        ClientResponse responseMsg =
+                webResource
+                        .path(basePath + pathVariable.replace("/",","))
+                        .get(ClientResponse.class);  // you just change this call from post to get
+
+        String output = responseMsg.getEntity(String.class);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        List<HadoopFile> hadoopFileList =
+                mapper.readValue(output, mapper.getTypeFactory().constructCollectionType(ArrayList.class, HadoopFile.class));
+
+        logger.info("First file name");
+        for (int i = 0; i < 25; i++){
+            logger.info(hadoopFileList.get(i).getFileName());
+            logger.info(hadoopFileList.get(i).getPath());
+            logger.info(hadoopFileList.get(i).getSize());
+            logger.info(hadoopFileList.get(i).getDateModified());
+            logger.info(hadoopFileList.get(i).getOwner());
+        }
+    }
+
 }

@@ -27,6 +27,9 @@ import javax.swing.table.DefaultTableModel;
  * HadoopScreen, 2017/07/01 15:38 Dorian Beganovic
  *
  **********************************************************************************************************************/
+/*
+interface for generalizing screens used by HadoopController classes
+ */
 public interface HadoopScreen {
 
     public void initializePanel();

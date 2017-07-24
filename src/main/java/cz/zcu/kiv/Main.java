@@ -1,7 +1,6 @@
 package cz.zcu.kiv;
 
-import java.awt.*;
-import java.io.IOException;
+import java.awt.EventQueue;
 
 /***********************************************************************************************************************
  *
@@ -35,8 +34,6 @@ public class Main {
                 JFrameSingleton.getMainScreen();
             }
         });
-
-
 
     }
 

@@ -6,8 +6,6 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.prefs.Preferences;
@@ -41,25 +39,38 @@ public class SettingsPanel extends JPanel {
     private static Log logger = LogFactory.getLog(SettingsPanel.class);
     private static Preferences preferences = Preferences.userRoot().node(Const.class.getName());
 
+    /**
+     * creates the SettingPanel
+     * @param jFrameParent when opening a new window, keep track of the parent
+     * @param path the path to initialize the prior window
+     */
+    public SettingsPanel(final JFrame jFrameParent, final String path){
 
-    public SettingsPanel(String a, String b){
-
-    }
-    public SettingsPanel(final JFrame jFrameParent, final String source, final String path){
-
-
+        /*
+        create a panel for every row of settings
+         */
+        // 1st row
         JLabel label1 = new JLabel("Home directory  ");
         final JTextField textField1 = new JTextField(Const.homeDirectory);
         textField1.setPreferredSize(new Dimension(400,30));
-
+        JPanel panel1 = new JPanel(new BorderLayout());
+        panel1.add(label1,BorderLayout.WEST);
+        panel1.add(textField1,BorderLayout.EAST);
+        // 2nd row
         final JLabel label2 = new JLabel("Remote URI        ");
         final JTextField textField2 = new JTextField(Const.remoteUriPrefix);
         textField2.setPreferredSize(new Dimension(400,30));
-
+        JPanel panel2 = new JPanel(new BorderLayout());
+        panel2.add(label2,BorderLayout.WEST);
+        panel2.add(textField2,BorderLayout.EAST);
+        // 3rd row
         JLabel label3 = new JLabel("Local URI           ");
         final JTextField textField3 = new JTextField(Const.localUriPrefix);
         textField3.setPreferredSize(new Dimension(400,30));
-
+        JPanel panel3 = new JPanel(new BorderLayout());
+        panel3.add(label3,BorderLayout.WEST);
+        panel3.add(textField3,BorderLayout.EAST);
+        // 4th row
         JLabel label4 = new JLabel("Use local mode ");
         final JCheckBox jCheckBox = new JCheckBox();
         if(Const.getUseLocalMode().equals("true")){
@@ -69,58 +80,15 @@ public class SettingsPanel extends JPanel {
             jCheckBox.setSelected(false);
         }
         jCheckBox.setPreferredSize(new Dimension(400,30));
-
-        JButton updateCache = new JButton("UPDATE CACHE");
-        updateCache.setPreferredSize(new Dimension(400,60));
-        updateCache.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-
-                final JProgressBar progressBar;
-                progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 5000);
-
-                SwingWorker<Void,Void> swingWorker = new SwingWorker<Void, Void>() {
-                    @Override
-                    protected Void doInBackground() throws Exception {
-                        logger.info("Updating hadoop data ...");
-                        HadoopController.cacheHadoopFilesIntoPreferences("/");
-                        HadoopController.initializeHadoopCacheFromPreferences();
-                        return null;
-                    }
-
-                    @Override
-                    protected void done() {
-                        JOptionPane.showMessageDialog(null, "Done, please close these windows !");
-                    }
-                };
-
-                swingWorker.execute();
-
-                progressBar.setStringPainted(true);
-                //progressBar.setString("Updating Hadoop cache");
-                progressBar.setValue(0);
-                final Timer timer = new Timer(10, null);
-                timer.addActionListener(new ActionListener() {
-                    int counter = 0;
-
-                    public void actionPerformed(ActionEvent evt) {
-                        counter++;
-                        progressBar.setValue(counter);
-                        if (counter > 10) {
-                            timer.stop();
-                        }
-                    }
-                });
-                timer.start();
-                JOptionPane.showOptionDialog(null, progressBar, "Caching hadoop files", JOptionPane.DEFAULT_OPTION,
-                        JOptionPane.INFORMATION_MESSAGE, null, null, null);
-
-            };
-        });
+        JPanel panel4 = new JPanel(new BorderLayout());
+        panel4.add(label4,BorderLayout.WEST);
+        panel4.add(jCheckBox,BorderLayout.EAST);
 
 
-
+        /*
+        logic for identifying a change in local mode settings (and changing it)
+         */
+        // 5th row
         JButton jButton = new JButton("SAVE");
         jButton.setPreferredSize(new Dimension(400,60));
         jButton.addMouseListener(new MouseAdapter() {
@@ -159,63 +127,88 @@ public class SettingsPanel extends JPanel {
 
                 Const.initializeValues();
                 Const.changeFileSystem();
-
-
             }
         });
 
-
+        // 6th row
         JButton jButton2 = new JButton("BACK");
         jButton2.setPreferredSize(new Dimension(400,60));
         jButton2.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
-                if( source.equals("GeneralScreen")) {
-                    jFrameParent.setContentPane(new GenScreen(jFrameParent,path));
-                }
-                else {
-                    throw new IllegalArgumentException("please pass in the correct reference to previous screen");
-                }
+                jFrameParent.setContentPane(new GenScreen(jFrameParent,path));
                 JFrameSingleton.getMainScreen().invalidate();
                 JFrameSingleton.getMainScreen().validate();
             }
         });
 
 
-        JPanel panel1 = new JPanel(new BorderLayout());
-        panel1.add(label1,BorderLayout.WEST);
-        panel1.add(textField1,BorderLayout.EAST);
 
-        JPanel panel2 = new JPanel(new BorderLayout());
-        panel2.add(label2,BorderLayout.WEST);
-        panel2.add(textField2,BorderLayout.EAST);
-
-        JPanel panel3 = new JPanel(new BorderLayout());
-        panel3.add(label3,BorderLayout.WEST);
-        panel3.add(textField3,BorderLayout.EAST);
-
-        JPanel panel4 = new JPanel(new BorderLayout());
-        panel4.add(label4,BorderLayout.WEST);
-        panel4.add(jCheckBox,BorderLayout.EAST);
-
-
-
+        // set the layout
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.anchor = GridBagConstraints.WEST;
-
         setLayout(new GridBagLayout());
 
+        // add all components to the screen
         add(panel1,gbc);
         add(panel2,gbc);
         add(panel3,gbc);
         add(panel4,gbc);
         add(jButton,gbc);
         add(jButton2,gbc);
+
+        /*
+        // some old code, will maybe be removed
+        JButton updateCache = new JButton("UPDATE CACHE");
+        updateCache.setPreferredSize(new Dimension(400,60));
+        updateCache.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+                final JProgressBar progressBar;
+                progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 5000);
+
+                SwingWorker<Void,Void> swingWorker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() throws Exception {
+                        logger.info("Updating hadoop data ...");
+                        HadoopCacheController.cacheHadoopFilesIntoPreferences("/");
+                        HadoopCacheController.initializeHadoopCacheFromPreferences();
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        JOptionPane.showMessageDialog(null, "Done, please close these windows !");
+                    }
+                };
+
+                swingWorker.execute();
+
+                progressBar.setStringPainted(true);
+                //progressBar.setString("Updating Hadoop cache");
+                progressBar.setValue(0);
+                final Timer timer = new Timer(10, null);
+                timer.addActionListener(new ActionListener() {
+                    int counter = 0;
+
+                    public void actionPerformed(ActionEvent evt) {
+                        counter++;
+                        progressBar.setValue(counter);
+                        if (counter > 10) {
+                            timer.stop();
+                        }
+                    }
+                });
+                timer.start();
+                JOptionPane.showOptionDialog(null, progressBar, "Caching hadoop files", JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE, null, null, null);
+
+            };
+        });
         add(updateCache,gbc);
-
-
+        */
 
     }
-
-
 }

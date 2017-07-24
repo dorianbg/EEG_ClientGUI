@@ -1,7 +1,7 @@
 package cz.zcu.kiv.DataUploading;
 
+import cz.zcu.kiv.Analysis.AnalysisPanel;
 import cz.zcu.kiv.Const;
-import cz.zcu.kiv.HadoopController;
 import cz.zcu.kiv.JFrameSingleton;
 import cz.zcu.kiv.SettingsPanel;
 import org.apache.commons.logging.Log;
@@ -22,7 +22,9 @@ import java.awt.event.*;
 import java.io.File;
 import java.util.ArrayList;
 
-import static cz.zcu.kiv.HadoopController.deleteFile;
+import static cz.zcu.kiv.Const.screenSizeHeight;
+import static cz.zcu.kiv.Const.screenSizeWidth;
+import static cz.zcu.kiv.DataUploading.HadoopHdfsController.deleteFile;
 import static java.lang.System.out;
 
 /***********************************************************************************************************************
@@ -53,18 +55,15 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
 
     private static Log logger = LogFactory.getLog(GenScreen.class);
 
-    private Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-    double width = screenSize.getWidth();
-    double height = screenSize.getHeight();
-
+    // parent screen (if double clicked)
     private JFrame jFrameParent;
     // initialize contents of the table as empty
     private String[][] data;
     // these are the predefined columns
-    private final String[] columns = HadoopController.columns;
+    private final String[] columns = HadoopHdfsController.columns;
     // table model ie. the data stored in the table
-    private DefaultTableModel tableModel;
     private  JTable table = new JTable();
+    private DefaultTableModel tableModel;
     // path which we want to analyze, in this case this is pretty fixed and mainly dependant on Constants
     private String path;
 
@@ -77,21 +76,8 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         logger.info("initialized with path " + path);
         this.path = path;
 
-
         // initialize the GUI
         initializePanel();
-
-        SwingWorker<Void,Void> swingWorker = new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                logger.info("Getting hadoop data in background...");
-                HadoopController.getHadoopData(GenScreen.this);
-                return null;
-            }
-        };
-
-        swingWorker.execute();
-
     }
 
 
@@ -99,27 +85,22 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
 
     @Override
     public void initializePanel() {
-        /*
-        create the graphics
-         */
-        logger.info("Initializing the panel");
+
+        // get the hadoop data for current path in a separate thread
+        SwingWorker<Void,Void> swingWorker = new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                logger.info("Getting hadoop data in background...");
+                HadoopHdfsController.getHadoopData(GenScreen.this);
+                return null;
+            }
+        };
+        swingWorker.execute();
+
 
         /*
         1. JTable
          */
-        /*
-        final JTable table = new JTable(){
-            @Override
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component component = super.prepareRenderer(renderer, row, column);
-                int rendererWidth = component.getPreferredSize().width;
-                TableColumn tableColumn = getColumnModel().getColumn(column);
-                tableColumn.setPreferredWidth(Math.max(rendererWidth + getIntercellSpacing().width, tableColumn.getPreferredWidth()));
-                return component;
-            }
-        };
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        */
         final JTable table = new JTable();
 
         //Create the table and put it in a scroll pane.
@@ -162,8 +143,8 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 if (mouseEvent.getClickCount() == 2) {
                     logger.info("Double clicked");
                     final JFrame frame = new JFrame();
-                    String cleanPath = path.replaceAll("/$","");
-                    String cleanFileName = "";
+                    String cleanPath = path.replaceAll("/$",""); // replace the ending "/" sign
+                    String cleanFileName;
                     if (data[table.getSelectedRow()][0].startsWith("/")){
                         cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/","");
                     }
@@ -171,13 +152,13 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                         cleanFileName = data[table.getSelectedRow()][0];
                     }
                     frame.add(new GenScreen(frame, cleanPath + Const.hadoopSeparator + cleanFileName));
-                    frame.setSize((int)width/2, (int)(height*3/4));
+                    frame.setSize((int) screenSizeWidth /2, (int)(screenSizeHeight*3/4));
                     frame.setResizable(true);
                     frame.setLocationByPlatform(true);
-                    //frame.setLocation(JFrameSingleton.getMainScreen().getLocation().x-10,JFrameSingleton.getMainScreen().getLocation().y-10);
                     frame.setLocationRelativeTo(null);
                     frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                     frame.setVisible(true);
+                    // set the escape button
                     KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
                     Action escapeAction = new AbstractAction() {
                         // close the frame when the user presses escape
@@ -191,9 +172,11 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
             }
         });
 
+        /*
+        Buttons
+         */
 
-
-        // back button
+        // 1. back button
         JButton backButton = new JButton("BACK");
         backButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -206,7 +189,161 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
             }
         });
 
-        // delete button
+
+        // 2. filter text field
+        final JTextField jTextField = new JTextField();
+        jTextField.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                update();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                update();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                update();
+            }
+
+            public void update() {
+                String query = jTextField.getText();
+
+                logger.info("Set the hadoop data (String[][]) matrix onto JTable ");
+
+                ArrayList<String[]> tempData = new ArrayList<String[]>();
+                for(String[] file : data){
+                    String filename = file[0];
+                    if (filename.toLowerCase().contains(query.toLowerCase())) {
+                        tempData.add(file);
+                    }
+                }
+                String[][] tempArray = new String[tempData.size()][5];
+                for(int i = 0; i < tempData.size(); i++){
+                    tempArray[i] = tempData.get(i);
+                }
+                getTableModel().setDataVector(tempArray,columns);
+                getTableModel().fireTableDataChanged();
+            }
+        });
+
+        // 3. analyze button
+        JButton analyzeButton = new JButton("ANALYZE");
+        analyzeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // IMPORTANT: THE NEXT PATH IS THE PATH YOU RECEIVED FROM PREVIOUS SCREEN PLUS THE PATH WHICH THE USER CHOOSE
+                // replace the "/" sign at the end of the string
+                String cleanPath;
+                if(path.endsWith("/")){
+                    cleanPath = path.substring(0,path.length()-1);
+                }
+                else{
+                    cleanPath = path;
+                }
+                // isolate the filename from the path
+                String cleanFileName = "";
+                if (data[table.getSelectedRow()][0].startsWith("/")){
+                    cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/","");
+                }
+                else{
+                    cleanFileName = data[table.getSelectedRow()][0];
+                }
+                // create the "clean" path value
+                String cleanNewPath = cleanPath + Const.hadoopSeparator + cleanFileName;
+
+                //
+                if(cleanFileName.endsWith(".txt")){
+                    final JFrame frame = new JFrame();
+                    frame.add(new AnalysisPanel(cleanNewPath));
+                    frame.setSize((int) screenSizeWidth /2, (int)(screenSizeHeight*3/4));
+                    frame.setResizable(true);
+                    frame.setLocationByPlatform(true);
+                    frame.setLocationRelativeTo(null);
+                    frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                    frame.setVisible(true);
+                    // set the escape button
+                    KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
+                    Action escapeAction = new AbstractAction() {
+                        // close the frame when the user presses escape
+                        public void actionPerformed(ActionEvent e) {
+                            frame.dispose();
+                        }
+                    };
+                    frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
+                    frame.getRootPane().getActionMap().put("ESCAPE", escapeAction);
+                }
+                else if(cleanFileName.endsWith(".eeg")){
+                    String input = JOptionPane.showInputDialog("Guessed number");
+                    int guessedNumber = Integer.parseInt(input);
+                    logger.info(input);
+                    final JFrame frame = new JFrame();
+                    frame.add(new AnalysisPanel(cleanNewPath,guessedNumber));
+                    frame.setSize((int) screenSizeWidth /2, (int)(screenSizeHeight*3/4));
+                    frame.setResizable(true);
+                    frame.setLocationByPlatform(true);
+                    frame.setLocationRelativeTo(null);
+                    frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                    frame.setVisible(true);
+                    // set the escape button
+                    KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
+                    Action escapeAction = new AbstractAction() {
+                        // close the frame when the user presses escape
+                        public void actionPerformed(ActionEvent e) {
+                            frame.dispose();
+                        }
+                    };
+                    frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
+                    frame.getRootPane().getActionMap().put("ESCAPE", escapeAction);
+
+                }
+                else{
+                    JOptionPane.showMessageDialog(null, "Please choose a .eeg or info.txt file");
+                    logger.info("Please choose a .eeg or info.txt file");
+                }
+
+                logger.info("Clean path " + path);
+                logger.info("Clean file name " + cleanFileName);
+                logger.info("Clean new path " + cleanPath + Const.hadoopSeparator + cleanFileName);
+
+                //jFrameParent.setContentPane(new AnalysisPanel(jFrameParent,cleanNewPath));
+                jFrameParent.invalidate();
+                jFrameParent.validate();
+            }
+        });
+
+        // 4. next button
+        JButton nextButton = new JButton("NEXT");
+        nextButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // IMPORTANT: THE NEXT PATH IS THE PATH YOU RECEIVED FROM PREVIOUS SCREEN PLUS THE PATH WHICH THE USER CHOOSE
+                // replace the "/" sign at the end of the string
+                String cleanPath;
+                if(path.endsWith("/")){
+                    cleanPath = path.substring(0,path.length()-1);
+                }
+                else{
+                    cleanPath = path;
+                }
+                // isolate the filename from the path
+                String cleanFileName = "";
+                if (data[table.getSelectedRow()][0].startsWith("/")){
+                    cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/","");
+                }
+                else{
+                    cleanFileName = data[table.getSelectedRow()][0];
+                }
+                // create the "clean" path value
+                String cleanNewPath = cleanPath + Const.hadoopSeparator + cleanFileName;
+                logger.info("Clean path " + path);
+                logger.info("Clean file name " + cleanFileName);
+                logger.info("Clean new path " + cleanPath + Const.hadoopSeparator + cleanFileName);
+                // initialize the new screen with the new path
+                jFrameParent.setContentPane(new GenScreen(jFrameParent,cleanNewPath));
+                jFrameParent.invalidate();
+                jFrameParent.validate();
+            }
+        });
+
+
+        // 5. delete button
         JButton deleteButton = new JButton("DELETE");
         deleteButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -220,61 +357,13 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                             Const.getHadoopFileSystem() );
                 }
 
-                HadoopController.getHadoopData(GenScreen.this);
+                HadoopHdfsController.getHadoopData(GenScreen.this);
             }
         });
 
-        // next button
-        JButton nextButton = new JButton("NEXT");
-        nextButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                // IMPORTANT: THE NEXT PATH IS THE PATH YOU RECEIVED FROM PREVIOUS SCREEN
-                // PLUS THE PATH WHICH THE USER CHOOSE
-                String cleanPath = path.replaceAll("/$","");
-                if(path.endsWith("/")){
-                    cleanPath = path.substring(0,path.length()-1);
-                }
-                else{
-                    cleanPath = path;
-                }
-                String cleanFileName = "";
-                if (data[table.getSelectedRow()][0].startsWith("/")){
-                    cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/","");
-                }
-                else{
-                    cleanFileName = data[table.getSelectedRow()][0];
-                }
-                String cleanNewPath = cleanPath + Const.hadoopSeparator + cleanFileName;
-                logger.info("Clean path " + path);
-                logger.info("Clean file name " + cleanFileName);
-                logger.info("Clean new path " + cleanPath + Const.hadoopSeparator + cleanFileName);
-                jFrameParent.setContentPane(new GenScreen(jFrameParent,cleanNewPath));
-                jFrameParent.invalidate();
-                jFrameParent.validate();
-            }
-        });
 
-        // ADD EXPERIMENT button
-        JButton createFolder = new JButton("CREATE FOLDER");
-        createFolder.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    String filename = JOptionPane.showInputDialog(null,
-                            "How should the folder be called?", "Enter the folder name",  JOptionPane.QUESTION_MESSAGE);
-                    FileSystem fs = Const.getHadoopFileSystem();
-                    logger.info("User wants to create a path " +  path + Const.hadoopSeparator +filename );
-                    fs.mkdirs(new Path(  path + Const.hadoopSeparator + filename));
-                    logger.info("Created a path " +  path + Const.hadoopSeparator + filename );
-                    HadoopController.getHadoopData(GenScreen.this);
-                }
-                catch (Exception ex) {
-                    out.println(ex.getMessage());
-                }
-            }
-        });
 
-        // Upload directory
+        // 6. upload folder
         JButton uploadDirectory = new JButton("UPLOAD FOLDER");
         uploadDirectory.addActionListener(new ActionListener() {
             @Override
@@ -310,7 +399,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                     JScrollPane sp = new JScrollPane(list);
                     jDialog.add(sp, BorderLayout.CENTER);
                     jDialog.pack();
-                    jDialog.setSize((int)(width/2.25),(int)(height/3));
+                    jDialog.setSize((int)(screenSizeWidth /2.25),(int)(screenSizeHeight/3));
                     jDialog.setLocationRelativeTo(null);
                     jDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                     jDialog.setVisible(true);
@@ -318,8 +407,8 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                     File dir = new File(filepath);
 
                     //copyFilesToDir(dir.listFiles(), fs, homeDirectory + Const.hadoopSeparator + path  + filename, list);
-                    HadoopController.copyFilesToDir(dir.listFiles(),fs, path  + filename, list,GenScreen.this);
-                    HadoopController.getHadoopData(GenScreen.this);
+                    HadoopHdfsController.copyFilesToDir(dir.listFiles(),fs, path  + filename, list,GenScreen.this);
+                    HadoopHdfsController.getHadoopData(GenScreen.this);
                 }
                 catch (Exception ex) {
                     out.println(ex.getMessage());
@@ -328,7 +417,27 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         });
 
 
-        // Upload files
+        // 7. create folder button
+        JButton createFolder = new JButton("CREATE FOLDER");
+        createFolder.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String filename = JOptionPane.showInputDialog(null,
+                            "How should the folder be called?", "Enter the folder name",  JOptionPane.QUESTION_MESSAGE);
+                    FileSystem fs = Const.getHadoopFileSystem();
+                    logger.info("User wants to create a path " +  path + Const.hadoopSeparator +filename );
+                    fs.mkdirs(new Path(  path + Const.hadoopSeparator + filename));
+                    logger.info("Created a path " +  path + Const.hadoopSeparator + filename );
+                    HadoopHdfsController.getHadoopData(GenScreen.this);
+                }
+                catch (Exception ex) {
+                    out.println(ex.getMessage());
+                }
+            }
+        });
+
+        // 8. upload files
         JButton uploadFiles = new JButton("UPLOAD FILES");
         uploadFiles.addActionListener(new ActionListener() {
             @Override
@@ -356,14 +465,14 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                     JScrollPane sp = new JScrollPane(list);
                     jDialog.add(sp, BorderLayout.CENTER);
                     jDialog.pack();
-                    jDialog.setSize((int)(width/2.25),(int)(height/3));
+                    jDialog.setSize((int)(screenSizeWidth/2.25),(int)(screenSizeHeight/3));
                     jDialog.setLocationRelativeTo(null);
                     jDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                     jDialog.setVisible(true);
 
-                    HadoopController.copyFilesToDir(files, fs,  path, list,GenScreen.this);
+                    HadoopHdfsController.copyFilesToDir(files, fs,  path, list,GenScreen.this);
 
-                    HadoopController.getHadoopData(GenScreen.this);
+                    HadoopHdfsController.getHadoopData(GenScreen.this);
                 }
                 catch (Exception ex) {
                     out.println(ex.getMessage());
@@ -371,54 +480,15 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
             }
         });
 
-        // filter text field
-        final JTextField jTextField = new JTextField();
-        jTextField.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) {
-                update();
-            }
-            public void removeUpdate(DocumentEvent e) {
-                update();
-            }
-            public void insertUpdate(DocumentEvent e) {
-                update();
-            }
 
-            public void update() {
-                String query = jTextField.getText();
-
-                logger.info("Set the hadoop data (String[][]) matrix onto JTable ");
-
-                ArrayList<String[]> tempData = new ArrayList<String[]>();
-                for(String[] file : data){
-                    String filename = file[0];
-                    if (filename.toLowerCase().contains(query.toLowerCase())) {
-                        tempData.add(file);
-                    }
-                }
-                String[][] tempArray = new String[tempData.size()][5];
-                for(int i = 0; i < tempData.size(); i++){
-                    tempArray[i] = tempData.get(i);
-                }
-                getTableModel().setDataVector(tempArray,columns);
-                getTableModel().fireTableDataChanged();
-            }
-        });
-
-        JButton analyzeButton = new JButton("ANALYZE");
-        analyzeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("hi");
-            }
-        });
-
-
-        int panelWidth = (int)width/2;
-        int panelHeight = (int)(height*3/4);
+        /*
+        set the preferred sizes of buttons
+         */
+        int panelWidth = (int)screenSizeWidth/2;
+        int panelHeight = (int)(screenSizeHeight*3/4);
         int unifiedHeight = (int) panelHeight/20;
 
-        // row1
+        // panel 1 - preferred sizes
         backButton.setPreferredSize(new Dimension((int)panelWidth/6,unifiedHeight));
         backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -433,7 +503,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         nextButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 
-        // row2
+        // panel 2 - preferred sizes
         deleteButton.setPreferredSize(new Dimension((int)panelWidth/6,unifiedHeight));
         deleteButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -448,7 +518,9 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
 
 
 
-        // create the 3 panels
+        /*
+        create the panels
+         */
         JPanel twoFloorPane = new JPanel();
         JPanel panelUp = new JPanel();
         JPanel panelDown = new JPanel();
@@ -493,7 +565,9 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         twoFloorPane.add(panelDown);
 
 
-        // add the menu bar
+        /*
+         add the menu bar
+          */
         JMenuBar jMenuBar = new JMenuBar();
 
         JMenu jMenu1 = new JMenu("Settings");
@@ -503,7 +577,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
                 if (mouseEvent.getClickCount() == 2) {
-                    JFrameSingleton.getMainScreen().setContentPane(new SettingsPanel(jFrameParent,"GeneralScreen",path));
+                    JFrameSingleton.getMainScreen().setContentPane(new SettingsPanel(jFrameParent,path));
                     JFrameSingleton.getMainScreen().invalidate();
                     JFrameSingleton.getMainScreen().validate();
                 }
@@ -516,7 +590,9 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
 
 
 
-        // add everything together to the JFrame
+        /*
+         add everything together to the JFrame
+          */
         add(jMenuBar,BorderLayout.PAGE_START);
         add(listScrollPane, BorderLayout.CENTER);
         add(twoFloorPane, BorderLayout.PAGE_END);

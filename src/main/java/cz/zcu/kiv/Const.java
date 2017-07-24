@@ -1,17 +1,17 @@
 package cz.zcu.kiv;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
-import java.io.*;
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.util.prefs.Preferences;
 
 /***********************************************************************************************************************
@@ -41,32 +41,61 @@ import java.util.prefs.Preferences;
 public class Const {
 
     private static Log logger = LogFactory.getLog(Const.class);
-    private static Preferences preferences = Preferences.userRoot().node(Const.class.getName());
 
-    // 0. Separators
+    // if you get an error with initializing preferences on windows see https://stackoverflow.com/questions/16428098/groovy-shell-warning-could-not-open-create-prefs-root-node
+    private static Preferences preferences = Preferences.userRoot().node(Const.class.getName());
+    public static final String hadoopSeparator = "/";
+
     public static String localSeparator = "";
-    static {
+    public static String uriPrefix;
+    static String remoteUriPrefix;
+    static String localUriPrefix;
+    static  String homeDirectory;
+    private static String useLocalMode;
+    public static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    public static double screenSizeWidth = screenSize.getWidth();
+    public static double screenSizeHeight = screenSize.getHeight();
+
+    private static FileSystem fileSystem = null;
+
+    /**
+     * deploys the application to windows os by properly placing the required winutils.exe file
+     */
+    private static void configureOS() {
         if (SystemUtils.IS_OS_WINDOWS) {
             localSeparator = "\\";
-            System.setProperty("hadoop.home.dir", "c:\\winutils\\");
+            String homeDirectory = System.getProperty("user.home");
+            // windows deployment !
+            System.out.printf(homeDirectory);
+            if(! new File(homeDirectory + "/Apache_Hadoop_Client/bin/winutils").exists()){
+                new File(homeDirectory + "/Apache_Hadoop_Client").mkdirs();
+                new File(homeDirectory + "/Apache_Hadoop_Client/bin").mkdirs();
+                URL inputUrl = Const.class.getResource("/winutils.exe");
+                File dest = new File(homeDirectory + "/Apache_Hadoop_Client/bin/winutils.exe");
+                try {
+                    FileUtils.copyURLToFile(inputUrl, dest);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("Done");
+            }
+            System.setProperty("hadoop.home.dir", homeDirectory + "/Apache_Hadoop_Client");
+
         }
         else {
             localSeparator = "/";
             System.setProperty("hadoop.home.dir", "/");
         }
     }
-    public static String hadoopSeparator = "/";
+    static {
+        configureOS();
+    }
 
-    // 1.
-    public static String uriPrefix;
-    public static String remoteUriPrefix;
-    public static String localUriPrefix;
-    private static String useLocalMode;
 
-    public static  String homeDirectory;
-
-    // 3. initialize all settings
-    public static void initializeValues(){
+    /**
+     * initializes the values of setting from the Java preferences API
+     */
+    static void initializeValues(){
         {
             homeDirectory = preferences.get("homeDirectory","/user/digitalAssistanceSystem/data/numbers");
             localUriPrefix = preferences.get("localUriPrefix","hdfs://localhost:8020");
@@ -80,7 +109,6 @@ public class Const {
             else{
                 uriPrefix = remoteUriPrefix;
             }
-
             logPreferences();
         }
     }
@@ -89,9 +117,18 @@ public class Const {
     }
 
 
+    /**
+     *
+     * @return useLocalMode value (string)
+     */
     public static String getUseLocalMode(){
         return useLocalMode;
     }
+
+    /**
+     *
+     * @param setting string "true" or "false"
+     */
     public static void setUseLocalMode(String setting){
         Const.useLocalMode = setting;
         if(useLocalMode.equals("true")){
@@ -103,19 +140,16 @@ public class Const {
         logPreferences();
     }
 
-
-    // 3.
-    private static FileSystem fileSystem = null;
-
-    public Const() throws IOException, ParseException {
-    }
-
+    /**
+     * singleton constructor
+     * @return the reference to single instance of FileSystem (Hadoop FileSystem)
+     */
     public static FileSystem getHadoopFileSystem() {
         if (fileSystem == null) {
             Configuration conf = new Configuration();
             conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
             conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
-            conf.set("fs.webhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName());
+            conf.set("fs.swebhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName());
 
             conf.setBoolean("fs.automatic.close", true);
             try {
@@ -127,12 +161,15 @@ public class Const {
         return fileSystem;
     }
 
+    /**
+     * used when the user chooses local mode (in the setting panel)
+     */
     public static void changeFileSystem(){
         if (fileSystem != null) {
             Configuration conf = new Configuration();
             conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
             conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
-            conf.set("fs.webhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName()); // a crazy fix
+            conf.set("fs.swebhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName()); // a crazy fix
 
             conf.setBoolean("fs.automatic.close", true);
             try {
@@ -144,6 +181,9 @@ public class Const {
         logPreferences();
     }
 
+    /**
+     * prints the preferences to the log output
+     */
     public static void logPreferences(){
         logger.info("homeDirectory =" + homeDirectory );
         logger.info("localUriPrefix =" + localUriPrefix );
