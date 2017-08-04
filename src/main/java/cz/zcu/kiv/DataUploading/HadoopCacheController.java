@@ -52,22 +52,22 @@ public class HadoopCacheController {
     private static Log logger = LogFactory.getLog(HadoopCacheController.class);
     private static Preferences preferences = Preferences.userRoot().node(Const.class.getName());
     private static ArrayList<HadoopFile> cachedHadoopFilesList = new ArrayList<HadoopFile>();
-    private static final String[] columns = {"File name", "Owner", "Size","Date modified"};
+    private static final String[] columns = {"File name", "Owner", "Size", "Date modified"};
 
 
     /**
      * if the preferences are not filled with cached hadoop files, then load them from the serialized file
      */
-    private static void initializeCache(){
+    private static void initializeCache() {
         int count = 0;
         try {
-            for (String key : preferences.keys()){
-                if (key.startsWith("hadoopCache")){
+            for (String key : preferences.keys()) {
+                if (key.startsWith("hadoopCache")) {
                     count++;
                 }
             }
             logger.info("hadoopCache keys count is: " + count);
-            if(count <= 10){
+            if (count <= 10) {
                 initializePreferencesFromSerialized();
             }
             initializeHadoopCacheFromPreferences();
@@ -87,6 +87,7 @@ public class HadoopCacheController {
 
     /**
      * reads the ArrayList of HadoopFiles from the serialized store and loads it into preferences
+     *
      * @throws IOException
      * @throws ClassNotFoundException
      */
@@ -105,9 +106,9 @@ public class HadoopCacheController {
         int size = jsonInString.length();
         if (size > Preferences.MAX_VALUE_LENGTH) {
             cnt = 1;
-            for(int idx = 0 ; idx < size ; cnt++) {
+            for (int idx = 0; idx < size; cnt++) {
                 if ((size - idx) > Preferences.MAX_VALUE_LENGTH) {
-                    preferences.put(key + "." + cnt, jsonInString.substring(idx,idx+Preferences.MAX_VALUE_LENGTH));
+                    preferences.put(key + "." + cnt, jsonInString.substring(idx, idx + Preferences.MAX_VALUE_LENGTH));
                     idx += Preferences.MAX_VALUE_LENGTH;
                 } else {
                     preferences.put(key + "." + cnt, jsonInString.substring(idx));
@@ -122,19 +123,20 @@ public class HadoopCacheController {
 
     /**
      * loads the ArrayList of HadoopFiles from the Java Preferences
+     *
      * @throws IOException
      * @throws BackingStoreException
      */
     private static void initializeHadoopCacheFromPreferences() throws IOException, BackingStoreException {
-        int count=0;
-        for (String key : preferences.keys()){
-            if (key.startsWith("hadoopCache")){
+        int count = 0;
+        for (String key : preferences.keys()) {
+            if (key.startsWith("hadoopCache")) {
                 count++;
             }
         }
         logger.info("loading hadoopCache from preferences");
-        StringBuilder jsonValue= new StringBuilder();
-        for (int i = 0; i <= count; i++){
+        StringBuilder jsonValue = new StringBuilder();
+        for (int i = 0; i <= count; i++) {
             jsonValue.append(preferences.get("hadoopCache." + i, ""));
         }
 
@@ -146,18 +148,19 @@ public class HadoopCacheController {
 
     /**
      * recursively visits all folders starting from a path
+     *
      * @param baseDirectoryPath the starting path
      * @return return the list of files found in the path
      */
-    private static ArrayList<HadoopFile> recursivelyListFilesInDirectory(String baseDirectoryPath){
+    private static ArrayList<HadoopFile> recursivelyListFilesInDirectory(String baseDirectoryPath) {
         ArrayList<HadoopFile> paths = new ArrayList<HadoopFile>(100);
         FileSystem fs = Const.getHadoopFileSystem();
         FileStatus[] files;
         try {
             files = fs.listStatus(new Path(baseDirectoryPath));
-            for (FileStatus file : files){
+            for (FileStatus file : files) {
                 paths.add(new HadoopFile(file));
-                if(file.isDirectory()){
+                if (file.isDirectory()) {
                     // use recursion to add all the files to the main list of files
                     logger.info("Exploring folder " + file.getPath());
                     paths.addAll(recursivelyListFilesInDirectory(file.getPath().toString()));
@@ -172,19 +175,21 @@ public class HadoopCacheController {
 
     /**
      * uses the Hadoop Java API to list all the files
+     *
      * @param baseDirectoryPath look for files in this folder
      * @return list of HadoopFile's
      */
-    public static List<HadoopFile> getHadoopFilesListFromJava(String baseDirectoryPath){
+    public static List<HadoopFile> getHadoopFilesListFromJava(String baseDirectoryPath) {
         return recursivelyListFilesInDirectory(baseDirectoryPath);
     }
 
     /**
      * connects to the REST server to get the files
+     *
      * @param baseDirectoryPath
      * @return
      */
-    public static List<HadoopFile> getHadoopFilesListFromREST(String baseDirectoryPath){
+    public static List<HadoopFile> getHadoopFilesListFromREST(String baseDirectoryPath) {
         Client client = Client.create();
         // change the resource address to our server
         String serverURI = "http://localhost:8080/";
@@ -200,7 +205,7 @@ public class HadoopCacheController {
 
         ClientResponse responseMsg =
                 webResource
-                        .path(basePath + pathVariable.replace("/",","))
+                        .path(basePath + pathVariable.replace("/", ","))
                         .get(ClientResponse.class);  // you just change this call from post to get
 
         String output = responseMsg.getEntity(String.class);
@@ -225,17 +230,18 @@ public class HadoopCacheController {
 
     /**
      * save the list of cached HadoopFiles into the java preferences
+     *
      * @param baseDirectoryPath
      */
-    public static void cacheHadoopFilesIntoPreferences(String baseDirectoryPath){
+    public static void cacheHadoopFilesIntoPreferences(String baseDirectoryPath) {
         List<HadoopFile> paths = getHadoopFilesListFromJava(baseDirectoryPath);
         ObjectMapper mapper = new ObjectMapper();
         String key = "hadoopCache";
         int cnt;
         try {
             // removes all previous hadoopCache keys
-            for (String keyTemp : preferences.keys()){
-                if (keyTemp.startsWith("hadoopCache")){
+            for (String keyTemp : preferences.keys()) {
+                if (keyTemp.startsWith("hadoopCache")) {
                     preferences.remove(keyTemp);
                 }
             }
@@ -245,9 +251,9 @@ public class HadoopCacheController {
             int size = jsonInString.length();
             if (size > Preferences.MAX_VALUE_LENGTH) {
                 cnt = 1;
-                for(int idx = 0 ; idx < size ; cnt++) {
+                for (int idx = 0; idx < size; cnt++) {
                     if ((size - idx) > Preferences.MAX_VALUE_LENGTH) {
-                        preferences.put(key + "." + cnt, jsonInString.substring(idx,idx+Preferences.MAX_VALUE_LENGTH));
+                        preferences.put(key + "." + cnt, jsonInString.substring(idx, idx + Preferences.MAX_VALUE_LENGTH));
                         idx += Preferences.MAX_VALUE_LENGTH;
                     } else {
                         preferences.put(key + "." + cnt, jsonInString.substring(idx));
@@ -267,15 +273,16 @@ public class HadoopCacheController {
 
     /**
      * saves the list of HadoopFiles into a serialized file (object)
+     *
      * @param baseDirectoryPath caches the files in sub-folders of this path
      */
-    public static void cacheHadoopFilesIntoSerialized(String baseDirectoryPath){
+    public static void cacheHadoopFilesIntoSerialized(String baseDirectoryPath) {
         ArrayList<HadoopFile> paths = recursivelyListFilesInDirectory(baseDirectoryPath);
         logger.info("Read all the files");
         FileOutputStream fileOutputStream = null;
         try {
-            fileOutputStream = new FileOutputStream("src/main/resources/hadoopFilesList.obj".replace("/",Const.localSeparator));
-            ObjectOutputStream objectOutputStream= new ObjectOutputStream(fileOutputStream);
+            fileOutputStream = new FileOutputStream("src/main/resources/hadoopFilesList.obj".replace("/", Const.localSeparator));
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
             objectOutputStream.writeObject(paths);
             objectOutputStream.close();
             fileOutputStream.close();
@@ -290,17 +297,18 @@ public class HadoopCacheController {
 
     /**
      * Filter the list (cache) of current Hadoop files
+     *
      * @param screen updates the data shown on screen
      */
-    public static void getCachedHadoopData(final HadoopScreen screen){
-        SwingWorker<String[][],Void> swingWorker = new SwingWorker<String[][], Void>() {
+    public static void getCachedHadoopData(final HadoopScreen screen) {
+        SwingWorker<String[][], Void> swingWorker = new SwingWorker<String[][], Void>() {
             @Override
             protected String[][] doInBackground() throws Exception {
                 // 1. get the current path and clean it
                 String desiredPath = screen.getPath();
 
-                if(!desiredPath.endsWith("/")){
-                    desiredPath+="/";
+                if (!desiredPath.endsWith("/")) {
+                    desiredPath += "/";
                 }
                 logger.info("Desired path is " + desiredPath);
 
@@ -315,8 +323,7 @@ public class HadoopCacheController {
                             hadoopFiles.add(file);
                             logger.debug("Found folder " + file.getPath());
                         }
-                    }
-                    catch (ArrayIndexOutOfBoundsException e){
+                    } catch (ArrayIndexOutOfBoundsException e) {
                         logger.debug("Failed to split the file: " + file.getPath() + " based on " + desiredPath);
                     }
                 }
@@ -335,12 +342,13 @@ public class HadoopCacheController {
                 }
                 return data;
             }
+
             @Override
             protected void done() {
                 logger.info("Done with getting cached hadoop data in background...");
                 logger.info("Created the data (String[][] matrix) for cached data");
 
-                String[][] fullData =null;
+                String[][] fullData = null;
                 try {
                     // this gets the result of doInBackground() method above
                     fullData = get();
@@ -350,10 +358,10 @@ public class HadoopCacheController {
                     e.printStackTrace();
                 }
                 // this is the base case when the table is empty
-                if(screen.getData().length == 0){
+                if (screen.getData().length == 0) {
                     logger.info("Set the cached data (String[][]) matrix onto JTable ");
                     screen.setData(fullData);
-                    screen.getTableModel().setDataVector(fullData,columns);
+                    screen.getTableModel().setDataVector(fullData, columns);
                     screen.getTableModel().fireTableDataChanged();
                 }
             }
@@ -362,15 +370,14 @@ public class HadoopCacheController {
     }
 
 
-
     @Test
-    public void cacheFilesTest(){
+    public void cacheFilesTest() {
         cacheHadoopFilesIntoPreferences("/user/digitalAssistanceSystem/data/numbers");
         //cacheHadoopFilesIntoSerialized(Const.homeDirectory);
     }
 
     @Test
-    public void cacheFilesTest2(){
+    public void cacheFilesTest2() {
         cacheHadoopFilesIntoSerialized("/user/digitalAssistanceSystem/data/numbers");
 
     }
@@ -384,7 +391,7 @@ public class HadoopCacheController {
         String pathVariable = "/"; //root of the fs
         ClientResponse responseMsg =
                 webResource
-                        .path(basePath + pathVariable.replace("/",","))
+                        .path(basePath + pathVariable.replace("/", ","))
                         .get(ClientResponse.class);  // you just change this call from post to get
 
         String output = responseMsg.getEntity(String.class);
@@ -395,7 +402,7 @@ public class HadoopCacheController {
                 mapper.readValue(output, mapper.getTypeFactory().constructCollectionType(ArrayList.class, HadoopFile.class));
 
         logger.info("First file name");
-        for (int i = 0; i < 25; i++){
+        for (int i = 0; i < 25; i++) {
             logger.info(hadoopFileList.get(i).getFileName());
             logger.info(hadoopFileList.get(i).getPath());
             logger.info(hadoopFileList.get(i).getSize());

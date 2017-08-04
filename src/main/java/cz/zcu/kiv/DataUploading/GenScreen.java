@@ -62,12 +62,12 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
     // these are the predefined columns
     private final String[] columns = HadoopHdfsController.columns;
     // table model ie. the data stored in the table
-    private  JTable table = new JTable();
+    private JTable table = new JTable();
     private DefaultTableModel tableModel;
     // path which we want to analyze, in this case this is pretty fixed and mainly dependant on Constants
     private String path;
 
-    public GenScreen(JFrame jFrameParent, final String path){
+    public GenScreen(JFrame jFrameParent, final String path) {
         //use the borderlayout
         super(new BorderLayout());
 
@@ -81,13 +81,11 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
     }
 
 
-
-
     @Override
     public void initializePanel() {
 
         // get the hadoop data for current path in a separate thread
-        SwingWorker<Void,Void> swingWorker = new SwingWorker<Void, Void>() {
+        SwingWorker<Void, Void> swingWorker = new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
                 logger.info("Getting hadoop data in background...");
@@ -143,16 +141,15 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 if (mouseEvent.getClickCount() == 2) {
                     logger.info("Double clicked");
                     final JFrame frame = new JFrame();
-                    String cleanPath = path.replaceAll("/$",""); // replace the ending "/" sign
+                    String cleanPath = path.replaceAll("/$", ""); // replace the ending "/" sign
                     String cleanFileName;
-                    if (data[table.getSelectedRow()][0].startsWith("/")){
-                        cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/","");
-                    }
-                    else{
+                    if (data[table.getSelectedRow()][0].startsWith("/")) {
+                        cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/", "");
+                    } else {
                         cleanFileName = data[table.getSelectedRow()][0];
                     }
                     frame.add(new GenScreen(frame, cleanPath + Const.hadoopSeparator + cleanFileName));
-                    frame.setSize((int) screenSizeWidth /2, (int)(screenSizeHeight*3/4));
+                    frame.setSize((int) screenSizeWidth / 2, (int) (screenSizeHeight * 3 / 4));
                     frame.setResizable(true);
                     frame.setLocationByPlatform(true);
                     frame.setLocationRelativeTo(null);
@@ -181,9 +178,9 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         backButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 logger.info("Path is " + path);
-                String backPath = path.substring(0,path.lastIndexOf(Const.hadoopSeparator));
+                String backPath = path.substring(0, path.lastIndexOf(Const.hadoopSeparator));
                 logger.info("Back path is " + backPath);
-                jFrameParent.setContentPane(new GenScreen(jFrameParent,backPath));
+                jFrameParent.setContentPane(new GenScreen(jFrameParent, backPath));
                 jFrameParent.invalidate();
                 jFrameParent.validate();
             }
@@ -196,9 +193,11 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
             public void changedUpdate(DocumentEvent e) {
                 update();
             }
+
             public void removeUpdate(DocumentEvent e) {
                 update();
             }
+
             public void insertUpdate(DocumentEvent e) {
                 update();
             }
@@ -209,17 +208,17 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 logger.info("Set the hadoop data (String[][]) matrix onto JTable ");
 
                 ArrayList<String[]> tempData = new ArrayList<String[]>();
-                for(String[] file : data){
+                for (String[] file : data) {
                     String filename = file[0];
                     if (filename.toLowerCase().contains(query.toLowerCase())) {
                         tempData.add(file);
                     }
                 }
                 String[][] tempArray = new String[tempData.size()][5];
-                for(int i = 0; i < tempData.size(); i++){
+                for (int i = 0; i < tempData.size(); i++) {
                     tempArray[i] = tempData.get(i);
                 }
-                getTableModel().setDataVector(tempArray,columns);
+                getTableModel().setDataVector(tempArray, columns);
                 getTableModel().fireTableDataChanged();
             }
         });
@@ -232,28 +231,26 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 // IMPORTANT: THE NEXT PATH IS THE PATH YOU RECEIVED FROM PREVIOUS SCREEN PLUS THE PATH WHICH THE USER CHOOSE
                 // replace the "/" sign at the end of the string
                 String cleanPath;
-                if(path.endsWith("/")){
-                    cleanPath = path.substring(0,path.length()-1);
-                }
-                else{
+                if (path.endsWith("/")) {
+                    cleanPath = path.substring(0, path.length() - 1);
+                } else {
                     cleanPath = path;
                 }
                 // isolate the filename from the path
                 String cleanFileName = "";
-                if (data[table.getSelectedRow()][0].startsWith("/")){
-                    cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/","");
-                }
-                else{
+                if (data[table.getSelectedRow()][0].startsWith("/")) {
+                    cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/", "");
+                } else {
                     cleanFileName = data[table.getSelectedRow()][0];
                 }
                 // create the "clean" path value
                 String cleanNewPath = cleanPath + Const.hadoopSeparator + cleanFileName;
 
                 //
-                if(cleanFileName.endsWith(".txt")){
+                if (cleanFileName.endsWith(".txt")) {
                     final JFrame frame = new JFrame();
                     frame.add(new AnalysisPanel(cleanNewPath));
-                    frame.setSize((int) screenSizeWidth /2, (int)(screenSizeHeight*3/4));
+                    frame.setSize((int) screenSizeWidth / 2, (int) (screenSizeHeight * 3 / 4));
                     frame.setResizable(true);
                     frame.setLocationByPlatform(true);
                     frame.setLocationRelativeTo(null);
@@ -269,14 +266,13 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                     };
                     frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
                     frame.getRootPane().getActionMap().put("ESCAPE", escapeAction);
-                }
-                else if(cleanFileName.endsWith(".eeg")){
+                } else if (cleanFileName.endsWith(".eeg")) {
                     String input = JOptionPane.showInputDialog("Guessed number");
                     int guessedNumber = Integer.parseInt(input);
                     logger.info(input);
                     final JFrame frame = new JFrame();
-                    frame.add(new AnalysisPanel(cleanNewPath,guessedNumber));
-                    frame.setSize((int) screenSizeWidth /2, (int)(screenSizeHeight*3/4));
+                    frame.add(new AnalysisPanel(cleanNewPath, guessedNumber));
+                    frame.setSize((int) screenSizeWidth / 2, (int) (screenSizeHeight * 3 / 4));
                     frame.setResizable(true);
                     frame.setLocationByPlatform(true);
                     frame.setLocationRelativeTo(null);
@@ -293,8 +289,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                     frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
                     frame.getRootPane().getActionMap().put("ESCAPE", escapeAction);
 
-                }
-                else{
+                } else {
                     JOptionPane.showMessageDialog(null, "Please choose a .eeg or info.txt file");
                     logger.info("Please choose a .eeg or info.txt file");
                 }
@@ -316,18 +311,16 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 // IMPORTANT: THE NEXT PATH IS THE PATH YOU RECEIVED FROM PREVIOUS SCREEN PLUS THE PATH WHICH THE USER CHOOSE
                 // replace the "/" sign at the end of the string
                 String cleanPath;
-                if(path.endsWith("/")){
-                    cleanPath = path.substring(0,path.length()-1);
-                }
-                else{
+                if (path.endsWith("/")) {
+                    cleanPath = path.substring(0, path.length() - 1);
+                } else {
                     cleanPath = path;
                 }
                 // isolate the filename from the path
                 String cleanFileName = "";
-                if (data[table.getSelectedRow()][0].startsWith("/")){
-                    cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/","");
-                }
-                else{
+                if (data[table.getSelectedRow()][0].startsWith("/")) {
+                    cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/", "");
+                } else {
                     cleanFileName = data[table.getSelectedRow()][0];
                 }
                 // create the "clean" path value
@@ -336,7 +329,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 logger.info("Clean file name " + cleanFileName);
                 logger.info("Clean new path " + cleanPath + Const.hadoopSeparator + cleanFileName);
                 // initialize the new screen with the new path
-                jFrameParent.setContentPane(new GenScreen(jFrameParent,cleanNewPath));
+                jFrameParent.setContentPane(new GenScreen(jFrameParent, cleanNewPath));
                 jFrameParent.invalidate();
                 jFrameParent.validate();
             }
@@ -353,14 +346,13 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                         JOptionPane.YES_NO_OPTION);
                 if (selectedOption == JOptionPane.YES_OPTION) {
                     deleteFile(
-                            path + Const.hadoopSeparator +  data[table.getSelectedRow()][0],
-                            Const.getHadoopFileSystem() );
+                            path + Const.hadoopSeparator + data[table.getSelectedRow()][0],
+                            Const.getHadoopFileSystem());
                 }
 
                 HadoopHdfsController.getHadoopData(GenScreen.this);
             }
         });
-
 
 
         // 6. upload folder
@@ -386,7 +378,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
 
                     logger.info("File path of the input folder/file " + filepath);
 
-                    String filename = filepath.substring(filepath.lastIndexOf("/"),filepath.length());
+                    String filename = filepath.substring(filepath.lastIndexOf("/"), filepath.length());
                     FileSystem fs = Const.getHadoopFileSystem();
 
 
@@ -399,7 +391,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                     JScrollPane sp = new JScrollPane(list);
                     jDialog.add(sp, BorderLayout.CENTER);
                     jDialog.pack();
-                    jDialog.setSize((int)(screenSizeWidth /2.25),(int)(screenSizeHeight/3));
+                    jDialog.setSize((int) (screenSizeWidth / 2.25), (int) (screenSizeHeight / 3));
                     jDialog.setLocationRelativeTo(null);
                     jDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                     jDialog.setVisible(true);
@@ -407,10 +399,9 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                     File dir = new File(filepath);
 
                     //copyFilesToDir(dir.listFiles(), fs, homeDirectory + Const.hadoopSeparator + path  + filename, list);
-                    HadoopHdfsController.copyFilesToDir(dir.listFiles(),fs, path  + filename, list,GenScreen.this);
+                    HadoopHdfsController.copyFilesToDir(dir.listFiles(), fs, path + filename, list, GenScreen.this);
                     HadoopHdfsController.getHadoopData(GenScreen.this);
-                }
-                catch (Exception ex) {
+                } catch (Exception ex) {
                     out.println(ex.getMessage());
                 }
             }
@@ -424,14 +415,13 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
             public void actionPerformed(ActionEvent e) {
                 try {
                     String filename = JOptionPane.showInputDialog(null,
-                            "How should the folder be called?", "Enter the folder name",  JOptionPane.QUESTION_MESSAGE);
+                            "How should the folder be called?", "Enter the folder name", JOptionPane.QUESTION_MESSAGE);
                     FileSystem fs = Const.getHadoopFileSystem();
-                    logger.info("User wants to create a path " +  path + Const.hadoopSeparator +filename );
-                    fs.mkdirs(new Path(  path + Const.hadoopSeparator + filename));
-                    logger.info("Created a path " +  path + Const.hadoopSeparator + filename );
+                    logger.info("User wants to create a path " + path + Const.hadoopSeparator + filename);
+                    fs.mkdirs(new Path(path + Const.hadoopSeparator + filename));
+                    logger.info("Created a path " + path + Const.hadoopSeparator + filename);
                     HadoopHdfsController.getHadoopData(GenScreen.this);
-                }
-                catch (Exception ex) {
+                } catch (Exception ex) {
                     out.println(ex.getMessage());
                 }
             }
@@ -465,16 +455,15 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                     JScrollPane sp = new JScrollPane(list);
                     jDialog.add(sp, BorderLayout.CENTER);
                     jDialog.pack();
-                    jDialog.setSize((int)(screenSizeWidth/2.25),(int)(screenSizeHeight/3));
+                    jDialog.setSize((int) (screenSizeWidth / 2.25), (int) (screenSizeHeight / 3));
                     jDialog.setLocationRelativeTo(null);
                     jDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                     jDialog.setVisible(true);
 
-                    HadoopHdfsController.copyFilesToDir(files, fs,  path, list,GenScreen.this);
+                    HadoopHdfsController.copyFilesToDir(files, fs, path, list, GenScreen.this);
 
                     HadoopHdfsController.getHadoopData(GenScreen.this);
-                }
-                catch (Exception ex) {
+                } catch (Exception ex) {
                     out.println(ex.getMessage());
                 }
             }
@@ -484,36 +473,36 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         /*
         set the preferred sizes of buttons
          */
-        int panelWidth = (int)screenSizeWidth/2;
-        int panelHeight = (int)(screenSizeHeight*3/4);
-        int unifiedHeight = (int) panelHeight/20;
+        int panelWidth = (int) screenSizeWidth / 2;
+        int panelHeight = (int) (screenSizeHeight * 3 / 4);
+        int unifiedHeight = (int) panelHeight / 20;
 
         // panel 1 - preferred sizes
-        backButton.setPreferredSize(new Dimension((int)panelWidth/6,unifiedHeight));
+        backButton.setPreferredSize(new Dimension((int) panelWidth / 6, unifiedHeight));
         backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        jTextField.setPreferredSize(new Dimension((int)panelWidth/4,unifiedHeight));
+        jTextField.setPreferredSize(new Dimension((int) panelWidth / 4, unifiedHeight));
         jTextField.setMinimumSize(jTextField.getPreferredSize());
         jTextField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        analyzeButton.setPreferredSize(new Dimension((int)panelWidth/5,unifiedHeight));
+        analyzeButton.setPreferredSize(new Dimension((int) panelWidth / 5, unifiedHeight));
         analyzeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        nextButton.setPreferredSize(new Dimension((int)panelWidth/5,unifiedHeight));
+        nextButton.setPreferredSize(new Dimension((int) panelWidth / 5, unifiedHeight));
         nextButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 
         // panel 2 - preferred sizes
-        deleteButton.setPreferredSize(new Dimension((int)panelWidth/6,unifiedHeight));
+        deleteButton.setPreferredSize(new Dimension((int) panelWidth / 6, unifiedHeight));
         deleteButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        uploadDirectory.setPreferredSize(new Dimension((int)panelWidth/4,unifiedHeight));
+        uploadDirectory.setPreferredSize(new Dimension((int) panelWidth / 4, unifiedHeight));
         uploadDirectory.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        createFolder.setPreferredSize(new Dimension((int)panelWidth/5,unifiedHeight));
+        createFolder.setPreferredSize(new Dimension((int) panelWidth / 5, unifiedHeight));
         createFolder.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        uploadFiles.setPreferredSize(new Dimension((int)panelWidth/5,unifiedHeight));
+        uploadFiles.setPreferredSize(new Dimension((int) panelWidth / 5, unifiedHeight));
         uploadFiles.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 
@@ -526,7 +515,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         JPanel panelDown = new JPanel();
 
         // place the items to panels and add layouts
-        twoFloorPane.setLayout(new GridLayout(2,1));
+        twoFloorPane.setLayout(new GridLayout(2, 1));
         panelUp.setLayout(new FlowLayout());
         panelDown.setLayout(new FlowLayout());
 
@@ -560,7 +549,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         panelDown.add(uploadFiles);
 
 
-        twoFloorPane.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        twoFloorPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         twoFloorPane.add(panelUp);
         twoFloorPane.add(panelDown);
 
@@ -577,7 +566,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
                 if (mouseEvent.getClickCount() == 2) {
-                    JFrameSingleton.getMainScreen().setContentPane(new SettingsPanel(jFrameParent,path));
+                    JFrameSingleton.getMainScreen().setContentPane(new SettingsPanel(jFrameParent, path));
                     JFrameSingleton.getMainScreen().invalidate();
                     JFrameSingleton.getMainScreen().validate();
                 }
@@ -593,7 +582,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         /*
          add everything together to the JFrame
           */
-        add(jMenuBar,BorderLayout.PAGE_START);
+        add(jMenuBar, BorderLayout.PAGE_START);
         add(listScrollPane, BorderLayout.CENTER);
         add(twoFloorPane, BorderLayout.PAGE_END);
 
@@ -606,11 +595,12 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
 
     @Override
     public String[][] getData() {
-        if(data == null){
+        if (data == null) {
             return new String[0][5];
         }
         return data;
     }
+
     @Override
     public String getPath() {
         return path;

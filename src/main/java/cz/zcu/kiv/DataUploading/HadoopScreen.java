@@ -33,12 +33,19 @@ interface for generalizing screens used by HadoopController classes
 public interface HadoopScreen {
 
     public void initializePanel();
+
     public String[][] getData();
+
     public void setData(String[][] data);
+
     public String getPath();
+
     public JTable getJTable();
+
     public void setJTable(JTable newTable);
+
     public DefaultTableModel getTableModel();
+
     public void setTableModel(DefaultTableModel tableModel);
 
 }

@@ -44,13 +44,14 @@ public class JFrameSingleton {
 
     private static JFrame mainScreen = null;
 
-    private JFrameSingleton(){
+    private JFrameSingleton() {
         // Exists only to defeat instantiation.
     }
 
     /**
      * creates the single main JFrame window, which when closed also closes the application
-     * @return  singleton JFrame
+     *
+     * @return singleton JFrame
      */
     public static JFrame getMainScreen() {
         if (mainScreen == null) {
@@ -124,7 +125,7 @@ public class JFrameSingleton {
              */
             logger.info("Starting the screen");
             mainScreen.add(new GenScreen(getMainScreen(), Const.homeDirectory));
-            mainScreen.setSize((int) screenSizeWidth /2, (int)(screenSizeHeight *3/4));
+            mainScreen.setSize((int) screenSizeWidth / 2, (int) (screenSizeHeight * 3 / 4));
             mainScreen.setResizable(true);
             mainScreen.setLocationByPlatform(true);
             mainScreen.setLocationRelativeTo(null); // positions the window to middle of screen

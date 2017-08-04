@@ -42,20 +42,22 @@ public class HadoopFile implements Serializable {
     private String dateModified;
     private boolean isDirectory;
 
-    public HadoopFile(){
+    public HadoopFile() {
 
     }
 
     public HadoopFile(FileStatus file) throws IOException {
-        this.fileName= file.getPath().toString().substring(file.getPath().toString().lastIndexOf(Const.hadoopSeparator)).replaceFirst(Const.hadoopSeparator,"");
+        this.fileName = file.getPath().toString().substring(file.getPath().toString().lastIndexOf(Const.hadoopSeparator)).replaceFirst(Const.hadoopSeparator, "");
         this.path = file.getPath().toString();
-        this.owner= file.getOwner();
-        this.size= Long.toString(file.getLen() / 1024 ) + " kb";
-        this.dateModified= new SimpleDateFormat("dd.MM.yyyy HH:mm").format(new java.util.Date(file.getModificationTime()));
+        this.owner = file.getOwner();
+        this.size = Long.toString(file.getLen() / 1024) + " kb";
+        this.dateModified = new SimpleDateFormat("dd.MM.yyyy HH:mm").format(new java.util.Date(file.getModificationTime()));
         this.isDirectory = file.isDirectory();
     }
 
-    public String getFileName() { return fileName; }
+    public String getFileName() {
+        return fileName;
+    }
 
     public String getPath() {
         return path;

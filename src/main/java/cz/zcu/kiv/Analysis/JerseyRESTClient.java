@@ -37,27 +37,32 @@ public class JerseyRESTClient {
     @Test
     public void testReceiveListOfStrings() throws Exception {
         Client client = Client.create();
+        int jobId = 10001;
 
-        WebResource webResource = client.resource("http://localhost:9090");
-        ClientResponse responseMsg = webResource.path("jobs")
-                .queryParam("list1", "one")
-                .queryParam("list2", "two")
-                .queryParam("list3", "three")
-                .post(ClientResponse.class);  // you just change this call from post to get
-        String output = responseMsg.getEntity(String.class);
-
-
-        ClientResponse responseMsg2 = webResource.path("jobs")
-                .queryParam("list1", "one")
-                .queryParam("list2", "two")
-                .queryParam("list3", "three")
-                .get(ClientResponse.class);     // the change implemented
-        String output2 = responseMsg2.getEntity(String.class);
-
-
+        WebResource webResource = client.resource("http://localhost:8080");
+        ClientResponse responseMsg = webResource.path("/jobs/submit/" + jobId)
+                .queryParam("config_reg_param", "0.01")
+                .queryParam("config_mini_batch_fraction", "1.0")
+                .queryParam("config_num_iterations", "10")
+                .queryParam("train_clf", "svm")
+                .queryParam("result_path", System.getProperty("user.home") + "/spark_server/results/" + jobId + ".txt")
+                .queryParam("info_file", "/user/digitalAssistanceSystem/data/numbers/infoTrain.txt")
+                .queryParam("config_step_size", "1.0")
+                .queryParam("fe", "dwt-8")
+                .get(ClientResponse.class);  // you just change this call from post to get
+//        String output = responseMsg.getEntity(String.class);
         System.out.println(responseMsg);
-        System.out.println(output);
-        System.out.println(output2);
+//        System.out.println(output);
 
+        String output2 = "";
+
+        while (!output2.equals("FINISHED")) {
+            output2 = webResource.path("/jobs/check/" + jobId).get(ClientResponse.class).getEntity(String.class);
+            System.out.println(output2);
+            Thread.sleep(100);
+        }
+
+        String output3 = webResource.path("/jobs/result/" + jobId).get(ClientResponse.class).getEntity(String.class);
+        System.out.println(output3);
     }
 }

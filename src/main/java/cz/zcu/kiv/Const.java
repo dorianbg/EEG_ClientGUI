@@ -48,9 +48,9 @@ public class Const {
 
     public static String localSeparator = "";
     public static String uriPrefix;
-    static String remoteUriPrefix;
+    public static String remoteUriPrefix;
     static String localUriPrefix;
-    static  String homeDirectory;
+    public static String homeDirectory;
     private static String useLocalMode;
     public static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     public static double screenSizeWidth = screenSize.getWidth();
@@ -67,7 +67,7 @@ public class Const {
             String homeDirectory = System.getProperty("user.home");
             // windows deployment !
             System.out.printf(homeDirectory);
-            if(! new File(homeDirectory + "/Apache_Hadoop_Client/bin/winutils").exists()){
+            if (!new File(homeDirectory + "/Apache_Hadoop_Client/bin/winutils").exists()) {
                 new File(homeDirectory + "/Apache_Hadoop_Client").mkdirs();
                 new File(homeDirectory + "/Apache_Hadoop_Client/bin").mkdirs();
                 URL inputUrl = Const.class.getResource("/winutils.exe");
@@ -81,12 +81,12 @@ public class Const {
             }
             System.setProperty("hadoop.home.dir", homeDirectory + "/Apache_Hadoop_Client");
 
-        }
-        else {
+        } else {
             localSeparator = "/";
             System.setProperty("hadoop.home.dir", "/");
         }
     }
+
     static {
         configureOS();
     }
@@ -95,53 +95,51 @@ public class Const {
     /**
      * initializes the values of setting from the Java preferences API
      */
-    static void initializeValues(){
+    static void initializeValues() {
         {
-            homeDirectory = preferences.get("homeDirectory","/user/digitalAssistanceSystem/data/numbers");
-            localUriPrefix = preferences.get("localUriPrefix","hdfs://localhost:8020");
-            remoteUriPrefix = preferences.get("remoteUriPrefix","webhdfs://147.228.63.46:50070");
-            useLocalMode = preferences.get("useLocalMode","false");
+            homeDirectory = preferences.get("homeDirectory", "/user/digitalAssistanceSystem/data/numbers");
+            localUriPrefix = preferences.get("localUriPrefix", "hdfs://localhost:8020");
+            remoteUriPrefix = preferences.get("remoteUriPrefix", "webhdfs://147.228.63.46:50070");
+            useLocalMode = preferences.get("useLocalMode", "false");
 
             logger.info("Successfully read the preferences");
-            if(useLocalMode.equals("true")){
+            if (useLocalMode.equals("true")) {
                 uriPrefix = localUriPrefix;
-            }
-            else{
+            } else {
                 uriPrefix = remoteUriPrefix;
             }
             logPreferences();
         }
     }
+
     static {
         initializeValues();
     }
 
 
     /**
-     *
      * @return useLocalMode value (string)
      */
-    public static String getUseLocalMode(){
+    public static String getUseLocalMode() {
         return useLocalMode;
     }
 
     /**
-     *
      * @param setting string "true" or "false"
      */
-    public static void setUseLocalMode(String setting){
+    public static void setUseLocalMode(String setting) {
         Const.useLocalMode = setting;
-        if(useLocalMode.equals("true")){
-            uriPrefix= localUriPrefix;
-        }
-        else {
-            uriPrefix= remoteUriPrefix;
+        if (useLocalMode.equals("true")) {
+            uriPrefix = localUriPrefix;
+        } else {
+            uriPrefix = remoteUriPrefix;
         }
         logPreferences();
     }
 
     /**
      * singleton constructor
+     *
      * @return the reference to single instance of FileSystem (Hadoop FileSystem)
      */
     public static FileSystem getHadoopFileSystem() {
@@ -153,7 +151,7 @@ public class Const {
 
             conf.setBoolean("fs.automatic.close", true);
             try {
-                fileSystem = FileSystem.get(URI.create(uriPrefix+ homeDirectory), conf);
+                fileSystem = FileSystem.get(URI.create(uriPrefix + homeDirectory), conf);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -164,7 +162,7 @@ public class Const {
     /**
      * used when the user chooses local mode (in the setting panel)
      */
-    public static void changeFileSystem(){
+    public static void changeFileSystem() {
         if (fileSystem != null) {
             Configuration conf = new Configuration();
             conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
@@ -173,7 +171,7 @@ public class Const {
 
             conf.setBoolean("fs.automatic.close", true);
             try {
-                Const.fileSystem = FileSystem.get(URI.create(uriPrefix+ homeDirectory), conf);
+                Const.fileSystem = FileSystem.get(URI.create(uriPrefix + homeDirectory), conf);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -184,11 +182,11 @@ public class Const {
     /**
      * prints the preferences to the log output
      */
-    public static void logPreferences(){
-        logger.info("homeDirectory =" + homeDirectory );
-        logger.info("localUriPrefix =" + localUriPrefix );
-        logger.info("remoteUriPrefix =" + remoteUriPrefix );
-        logger.info("useLocalMode =" + useLocalMode );
+    public static void logPreferences() {
+        logger.info("homeDirectory =" + homeDirectory);
+        logger.info("localUriPrefix =" + localUriPrefix);
+        logger.info("remoteUriPrefix =" + remoteUriPrefix);
+        logger.info("useLocalMode =" + useLocalMode);
         logger.info("uriPrefix =" + uriPrefix);
     }
 

@@ -45,15 +45,16 @@ public class HadoopHdfsController {
     private static Log logger = LogFactory.getLog(HadoopHdfsController.class);
     private static Preferences preferences = Preferences.userRoot().node(Const.class.getName());
     private static ArrayList<HadoopFile> cachedHadoopFilesList = new ArrayList<HadoopFile>();
-    public static final String[] columns = {"File name", "Owner", "Size","Date modified"};
+    public static final String[] columns = {"File name", "Owner", "Size", "Date modified"};
 
 
     /**
      * Used to update the JTable model with live Hadoop data
+     *
      * @param screen
      */
-    public static void getHadoopData(final HadoopScreen screen){
-        SwingWorker<String[][],Void> swingWorker = new SwingWorker<String[][], Void>() {
+    public static void getHadoopData(final HadoopScreen screen) {
+        SwingWorker<String[][], Void> swingWorker = new SwingWorker<String[][], Void>() {
             @Override
             protected String[][] doInBackground() throws Exception {
 
@@ -71,20 +72,19 @@ public class HadoopHdfsController {
                     // create the data array for JTable
                     data = new String[files.length][columns.length];
 
-                    for (int i = 0; i < files.length; i++){
+                    for (int i = 0; i < files.length; i++) {
                         // 1. filename
-                        data[i][0]= files[i].getPath().toString().substring(files[i].getPath().toString().lastIndexOf(Const.hadoopSeparator)).replaceFirst(Const.hadoopSeparator,"");
+                        data[i][0] = files[i].getPath().toString().substring(files[i].getPath().toString().lastIndexOf(Const.hadoopSeparator)).replaceFirst(Const.hadoopSeparator, "");
                         // 2. fileowner
-                        data[i][1]= files[i].getOwner();
+                        data[i][1] = files[i].getOwner();
                         // 3. folder/file size
-                        data[i][2] = Long.toString(files[i].getLen()/ 1024 ) + " kb";
+                        data[i][2] = Long.toString(files[i].getLen() / 1024) + " kb";
                         //data[i][2]= Long.toString(fs.getContentSummary(files[i].getPath()).getSpaceConsumed() / (1024 * 1024)) + " mb";
                         // data modified
-                        data[i][3]= new SimpleDateFormat("dd.MM.yyyy").format(new java.util.Date(files[i].getModificationTime()));
+                        data[i][3] = new SimpleDateFormat("dd.MM.yyyy").format(new java.util.Date(files[i].getModificationTime()));
                     }
 
-                }
-                catch (Exception e){
+                } catch (Exception e) {
                     logger.info(e.getMessage());
                 }
                 return data;
@@ -96,7 +96,7 @@ public class HadoopHdfsController {
                 logger.info("Done with getting hadoop data in background...");
                 logger.info("Created the data (String[][] matrix) for hadoop data");
 
-                String[][] fullData =null;
+                String[][] fullData = null;
                 try {
                     fullData = get();
                 } catch (InterruptedException e) {
@@ -111,11 +111,11 @@ public class HadoopHdfsController {
                 screen.setData(fullData);
                 logger.info("Set the hadoop data (String[][]) matrix onto JTable ");
 
-                screen.getTableModel().setDataVector(fullData,columns);
+                screen.getTableModel().setDataVector(fullData, columns);
                 screen.getTableModel().fireTableDataChanged();
 
                 // re-apply selected rows in jtable
-                for (int i=0; i<sel.length; i++){
+                for (int i = 0; i < sel.length; i++) {
                     screen.getJTable().getSelectionModel().addSelectionInterval(sel[i], sel[i]);
                 }
             }
@@ -126,26 +126,27 @@ public class HadoopHdfsController {
 
     /**
      * recursively copies from path A to path B preserving the internal structure
-     * @param files list of local files to be copied
-     * @param fs filesystem to which to copy to
+     *
+     * @param files       list of local files to be copied
+     * @param fs          filesystem to which to copy to
      * @param destDirPath desired directory path
-     * @param list list which is updated during the file copy process
-     * @param screen screen which gets data updated
+     * @param list        list which is updated during the file copy process
+     * @param screen      screen which gets data updated
      * @throws IOException
      */
     public static void copyFilesToDir(final File[] files, final FileSystem fs, final String destDirPath, final JList list, final HadoopScreen screen)
             throws IOException {
-        SwingWorker<Void,String> swingWorker = new SwingWorker<Void, String>() {
+        SwingWorker<Void, String> swingWorker = new SwingWorker<Void, String>() {
 
             // copy the files
             @Override
             protected Void doInBackground() throws Exception {
                 logger.info("Copying all the files from directory ");
-                for (File file :  files) {
-                    if(!file.getName().startsWith(".")){
+                for (File file : files) {
+                    if (!file.getName().startsWith(".")) {
                         logger.info("SRC: " + file.getPath());
                         logger.info("DEST: " + destDirPath + Const.hadoopSeparator + file.getName());
-                        fs.copyFromLocalFile(new Path(file.getPath()),new Path(destDirPath, file.getName()));
+                        fs.copyFromLocalFile(new Path(file.getPath()), new Path(destDirPath, file.getName()));
                         String text = "SRC: " + file.getPath() + " \n" + "DEST: " + destDirPath + Const.hadoopSeparator + file.getName();
                         publish(text);
                     }
@@ -156,7 +157,7 @@ public class HadoopHdfsController {
             // updates the list every time publish() is executed within doInBackground()
             @Override
             protected void process(List<String> chunks) {
-                String lastLine= chunks.get(chunks.size()-1);
+                String lastLine = chunks.get(chunks.size() - 1);
                 String source = lastLine.split("\n")[0];
                 String dest = lastLine.split("\n")[1];
                 logger.info("Chunk" + lastLine);
@@ -180,14 +181,15 @@ public class HadoopHdfsController {
 
     /**
      * recursively deletes a path
+     *
      * @param filePath path on which to delete the files
-     * @param fs filesystem on which to delete the files
+     * @param fs       filesystem on which to delete the files
      */
-    public static void deleteFile(String filePath, FileSystem fs)  {
+    public static void deleteFile(String filePath, FileSystem fs) {
         logger.info("Deleting file " + filePath);
         try {
             // the false flags means you can only delete files and not folders
-            fs.delete(new Path(filePath),true);
+            fs.delete(new Path(filePath), true);
         } catch (IOException e) {
             e.printStackTrace();
         }

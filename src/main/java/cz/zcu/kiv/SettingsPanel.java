@@ -41,10 +41,11 @@ public class SettingsPanel extends JPanel {
 
     /**
      * creates the SettingPanel
+     *
      * @param jFrameParent when opening a new window, keep track of the parent
-     * @param path the path to initialize the prior window
+     * @param path         the path to initialize the prior window
      */
-    public SettingsPanel(final JFrame jFrameParent, final String path){
+    public SettingsPanel(final JFrame jFrameParent, final String path) {
 
         /*
         create a panel for every row of settings
@@ -52,37 +53,36 @@ public class SettingsPanel extends JPanel {
         // 1st row
         JLabel label1 = new JLabel("Home directory  ");
         final JTextField textField1 = new JTextField(Const.homeDirectory);
-        textField1.setPreferredSize(new Dimension(400,30));
+        textField1.setPreferredSize(new Dimension(400, 30));
         JPanel panel1 = new JPanel(new BorderLayout());
-        panel1.add(label1,BorderLayout.WEST);
-        panel1.add(textField1,BorderLayout.EAST);
+        panel1.add(label1, BorderLayout.WEST);
+        panel1.add(textField1, BorderLayout.EAST);
         // 2nd row
         final JLabel label2 = new JLabel("Remote URI        ");
         final JTextField textField2 = new JTextField(Const.remoteUriPrefix);
-        textField2.setPreferredSize(new Dimension(400,30));
+        textField2.setPreferredSize(new Dimension(400, 30));
         JPanel panel2 = new JPanel(new BorderLayout());
-        panel2.add(label2,BorderLayout.WEST);
-        panel2.add(textField2,BorderLayout.EAST);
+        panel2.add(label2, BorderLayout.WEST);
+        panel2.add(textField2, BorderLayout.EAST);
         // 3rd row
         JLabel label3 = new JLabel("Local URI           ");
         final JTextField textField3 = new JTextField(Const.localUriPrefix);
-        textField3.setPreferredSize(new Dimension(400,30));
+        textField3.setPreferredSize(new Dimension(400, 30));
         JPanel panel3 = new JPanel(new BorderLayout());
-        panel3.add(label3,BorderLayout.WEST);
-        panel3.add(textField3,BorderLayout.EAST);
+        panel3.add(label3, BorderLayout.WEST);
+        panel3.add(textField3, BorderLayout.EAST);
         // 4th row
         JLabel label4 = new JLabel("Use local mode ");
         final JCheckBox jCheckBox = new JCheckBox();
-        if(Const.getUseLocalMode().equals("true")){
+        if (Const.getUseLocalMode().equals("true")) {
             jCheckBox.setSelected(true);
-        }
-        else {
+        } else {
             jCheckBox.setSelected(false);
         }
-        jCheckBox.setPreferredSize(new Dimension(400,30));
+        jCheckBox.setPreferredSize(new Dimension(400, 30));
         JPanel panel4 = new JPanel(new BorderLayout());
-        panel4.add(label4,BorderLayout.WEST);
-        panel4.add(jCheckBox,BorderLayout.EAST);
+        panel4.add(label4, BorderLayout.WEST);
+        panel4.add(jCheckBox, BorderLayout.EAST);
 
 
         /*
@@ -90,30 +90,27 @@ public class SettingsPanel extends JPanel {
          */
         // 5th row
         JButton jButton = new JButton("SAVE");
-        jButton.setPreferredSize(new Dimension(400,60));
+        jButton.setPreferredSize(new Dimension(400, 60));
         jButton.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
                 Const.homeDirectory = textField1.getText();
                 Const.remoteUriPrefix = textField2.getText();
                 Const.localUriPrefix = textField3.getText();
-                if(jCheckBox.isSelected() && Const.getUseLocalMode().equals("true")){
+                if (jCheckBox.isSelected() && Const.getUseLocalMode().equals("true")) {
                     // no change
                     logger.info("jCheckBox is selected");
                     logger.info("using local mode already");
                     logger.info("no changes will be made");
-                }
-                else if(!jCheckBox.isSelected() && Const.getUseLocalMode().equals("false")) {
+                } else if (!jCheckBox.isSelected() && Const.getUseLocalMode().equals("false")) {
                     // no change
                     logger.info("jCheckBox is not selected");
                     logger.info("not using local mode");
                     logger.info("no changes will be made");
-                }
-                else {
+                } else {
                     logger.info("changes will be made");
-                    if(jCheckBox.isSelected()){
+                    if (jCheckBox.isSelected()) {
                         Const.setUseLocalMode("true");
-                    }
-                    else{
+                    } else {
                         Const.setUseLocalMode("false");
                     }
                 }
@@ -121,7 +118,7 @@ public class SettingsPanel extends JPanel {
                 preferences.put("homeDirectory", Const.homeDirectory);
                 preferences.put("localUriPrefix", Const.localUriPrefix);
                 preferences.put("remoteUriPrefix", Const.remoteUriPrefix);
-                preferences.put("useLocalMode",Const.getUseLocalMode());
+                preferences.put("useLocalMode", Const.getUseLocalMode());
                 logger.info("Settings saved");
 
 
@@ -132,15 +129,14 @@ public class SettingsPanel extends JPanel {
 
         // 6th row
         JButton jButton2 = new JButton("BACK");
-        jButton2.setPreferredSize(new Dimension(400,60));
+        jButton2.setPreferredSize(new Dimension(400, 60));
         jButton2.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
-                jFrameParent.setContentPane(new GenScreen(jFrameParent,path));
+                jFrameParent.setContentPane(new GenScreen(jFrameParent, path));
                 JFrameSingleton.getMainScreen().invalidate();
                 JFrameSingleton.getMainScreen().validate();
             }
         });
-
 
 
         // set the layout
@@ -150,12 +146,12 @@ public class SettingsPanel extends JPanel {
         setLayout(new GridBagLayout());
 
         // add all components to the screen
-        add(panel1,gbc);
-        add(panel2,gbc);
-        add(panel3,gbc);
-        add(panel4,gbc);
-        add(jButton,gbc);
-        add(jButton2,gbc);
+        add(panel1, gbc);
+        add(panel2, gbc);
+        add(panel3, gbc);
+        add(panel4, gbc);
+        add(jButton, gbc);
+        add(jButton2, gbc);
 
         /*
         // some old code, will maybe be removed
