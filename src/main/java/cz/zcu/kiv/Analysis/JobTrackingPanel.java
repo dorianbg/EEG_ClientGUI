@@ -8,8 +8,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.swing.*;
+import javax.swing.text.DefaultCaret;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.Map;
+
+import static cz.zcu.kiv.Const.screenSizeHeight;
+import static cz.zcu.kiv.Const.screenSizeWidth;
 
 /***********************************************************************************************************************
  *
@@ -97,9 +104,56 @@ public class JobTrackingPanel extends JPanel {
         classifierInfoPanel.add(classifierInfo,BorderLayout.CENTER);
         jobTrackingPanel.add(classifierInfoPanel);
 
+        /*
+        log button
+         */
+        JButton logButton = new JButton("Log");
+        logButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final JFrame frame = new JFrame();
+                final Client loadClient = Client.create();
+                WebResource webResourceClient = loadClient.resource("http://localhost:8080").path("/jobs/log/" + jobId);
+                ClientResponse responseMsg = webResourceClient.get(ClientResponse.class);  // you just change this call from post to get
+                String log = responseMsg.getEntity(String.class);
+                //
+                JTextArea textArea = new JTextArea(log);
+                textArea.setEditable(false); // set textArea non-editable
+
+                JScrollPane jScrollPane = new JScrollPane(textArea);
+                // sets the jscrollbar to the bottom
+                JScrollBar vertical = jScrollPane.getVerticalScrollBar();
+                vertical.setValue( vertical.getMaximum() );
+
+                JPanel panel = new JPanel();
+                panel.setLayout(new GridLayout());
+                panel.add(jScrollPane);
+                frame.add(panel);
+                frame.setSize((int) screenSizeWidth * 2 / 3, (int) (screenSizeHeight * 3 / 4));
+                frame.setResizable(true);
+                frame.setLocationByPlatform(true);
+                frame.setLocationRelativeTo(null);
+                frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                frame.setVisible(true);
+                // set the escape button
+                KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
+                Action escapeAction = new AbstractAction() {
+                    // close the frame when the user presses escape
+                    public void actionPerformed(ActionEvent e) {
+                        frame.dispose();
+                    }
+                };
+                frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
+                frame.getRootPane().getActionMap().put("ESCAPE", escapeAction);
+
+            }
+        });
+
+
 
         this.add(jobStatusPanel,gbc);
         this.add(jobTrackingPanel,gbc);
+        this.add(logButton,gbc);
 
         SwingWorker<Void, Void> swingWorker = new SwingWorker<Void, Void>() {
             @Override

@@ -115,7 +115,12 @@ public class AnalysisPanel extends JPanel {
         /*
          * Load classifier panel
          */
-        String[] queries1 = {"log_reg_demo_Dorian_22.3.2017.", "svm_demo_Dorian_22.3.2017."};
+
+        final Client loadClient = Client.create();
+        WebResource webResourceClient = loadClient.resource("http://localhost:8080").path("/classifiers/list");
+        ClientResponse responseMsg = webResourceClient.get(ClientResponse.class);  // you just change this call from post to get
+        String[] queries1 = responseMsg.getEntity(String.class).replace('[',' ').replace(']',' ').split(",");
+
         final JList loadClfList = new JList(queries1);
         loadClfList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         loadClfList.setVisibleRowCount(5);
@@ -307,8 +312,8 @@ public class AnalysisPanel extends JPanel {
                 // add the classifier
                 if (loadButton.isSelected()) {
                     String value = loadClfList.getSelectedValue().toString();
-                    queryParams.put("load_clf", value.substring(0, value.indexOf("_") - 1));
-                    queryParams.put("load_name", value);
+                    queryParams.put("load_clf", value.substring(1, value.indexOf("_")));
+                    queryParams.put("load_name", value.substring(1,value.length()));
                 } else if (trainButton.isSelected()) {
                     String value = trainClfList.getSelectedValue().toString();
                     String clfAbbreviation = "";
@@ -363,17 +368,19 @@ public class AnalysisPanel extends JPanel {
                 frame.setLocationRelativeTo(null);
                 frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                 frame.setVisible(true);
-                // set the escape button
-                KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
-                Action escapeAction = new AbstractAction() {
-                    // close the frame when the user presses escape
-                    public void actionPerformed(ActionEvent e) {
-                        frame.dispose();
+                frame.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                        if (JOptionPane.showConfirmDialog(frame,
+                                "Are you sure to close this window anc cancel this job?", "Closing",
+                                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
+                            logger.info("Closing the window");
+                            WebResource webResource = client.resource("http://localhost:8080").path("/jobs/cancel/" + jobId);
+                            ClientResponse responseMsg = webResource.get(ClientResponse.class);  // you just change this call from post to get
+                            logger.info("Cancelled the job");
+                        }
                     }
-                };
-                frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
-                frame.getRootPane().getActionMap().put("ESCAPE", escapeAction);
-
+                });
             }
         });
 
