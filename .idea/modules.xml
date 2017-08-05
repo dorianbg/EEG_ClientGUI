@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/EEG_WorkflowGUI.iml" filepath="$PROJECT_DIR$/EEG_WorkflowGUI.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Workflow_GUI.iml" filepath="$PROJECT_DIR$/Workflow_GUI.iml" />
     </modules>
   </component>
 </project>

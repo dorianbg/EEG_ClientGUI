@@ -100,7 +100,16 @@ public class JobTrackingPanel extends JPanel {
         classifierInfoPanel.add(new JLabel("Job information"),BorderLayout.NORTH);
         JTextArea classifierInfo = new JTextArea(150,20);
         classifierInfo.setEditable(false);
-        classifierInfo.setText(hashMapToText(queryParams));
+        if(queryParams.containsKey("load_clf")){
+            WebResource webResource = client.resource("http://localhost:8080").path("/jobs/configuration/" + queryParams.get("load_name"));
+            ClientResponse responseMsg = webResource.get(ClientResponse.class);  // you just change this call from post to get
+            String text = responseMsg.getEntity(String.class);
+            text = text.replace("/////","\n");
+            classifierInfo.setText(text);
+        }
+        else{
+            classifierInfo.setText(hashMapToText(queryParams));
+        }
         classifierInfoPanel.add(classifierInfo,BorderLayout.CENTER);
         jobTrackingPanel.add(classifierInfoPanel);
 

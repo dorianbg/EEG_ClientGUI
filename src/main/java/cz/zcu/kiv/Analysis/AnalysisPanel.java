@@ -3,7 +3,9 @@ package cz.zcu.kiv.Analysis;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import cz.zcu.kiv.Analysis.Config.DecisionTreeConfigScreen;
 import cz.zcu.kiv.Analysis.Config.LogRegConfigScreen;
+import cz.zcu.kiv.Analysis.Config.RandomForestConfigScreen;
 import cz.zcu.kiv.Analysis.Config.SVMConfigScreen;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -170,6 +172,20 @@ public class AnalysisPanel extends JPanel {
                         config.put("config_step_size", "1.0");
                         config.put("config_num_iterations", "100");
                         config.put("config_mini_batch_fraction", "1.0");
+                    } else if (value.equals("Decision Tree")) {
+                        config.clear();
+                        config.put("config_max_depth", "5");
+                        config.put("config_max_bins", "32");
+                        config.put("config_min_instances_per_node", "1");
+                        config.put("config_impurity", "gini");
+                    } else if (value.equals("Random Forest")) {
+                        config.clear();
+                        config.put("config_max_depth", "5");
+                        config.put("config_max_bins", "32");
+                        config.put("config_min_instances_per_node", "1");
+                        config.put("config_impurity", "gini");
+                        config.put("config_feature_subset", "auto");
+                        config.put("config_num_trees", "100");
                     } else {
 
                     }
@@ -196,6 +212,10 @@ public class AnalysisPanel extends JPanel {
                     frame.add(new LogRegConfigScreen(config));
                 } else if (trainClfList.getSelectedValue().toString().equals("Support Vector Machine")) {
                     frame.add(new SVMConfigScreen(config));
+                } else if (trainClfList.getSelectedValue().toString().equals("Decision Tree")) {
+                    frame.add(new DecisionTreeConfigScreen(config));
+                } else if (trainClfList.getSelectedValue().toString().equals("Random Forest")) {
+                    frame.add(new RandomForestConfigScreen(config));
                 } else {
 
                 }
@@ -361,7 +381,9 @@ public class AnalysisPanel extends JPanel {
 
                 logger.info("Launching GUI");
                 final JFrame frame = new JFrame();
-                frame.add(new JobTrackingPanel(client,jobId,queryParams));
+
+                final JobTrackingPanel panel = new JobTrackingPanel(client,jobId,queryParams);
+                frame.add(panel);
                 frame.setSize((int) screenSizeWidth / 2, (int) (screenSizeHeight * 3 / 4));
                 frame.setResizable(true);
                 frame.setLocationByPlatform(true);
@@ -371,9 +393,10 @@ public class AnalysisPanel extends JPanel {
                 frame.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-                        if (JOptionPane.showConfirmDialog(frame,
-                                "Are you sure to close this window anc cancel this job?", "Closing",
-                                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
+                        // pop-up window with a question
+                        if (JOptionPane.showConfirmDialog(frame, "Are you you want to close this window? If a job is running it will be cancelled", "Closing", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
+                                == JOptionPane.YES_OPTION)
+                        {
                             logger.info("Closing the window");
                             WebResource webResource = client.resource("http://localhost:8080").path("/jobs/cancel/" + jobId);
                             ClientResponse responseMsg = webResource.get(ClientResponse.class);  // you just change this call from post to get
@@ -398,4 +421,5 @@ public class AnalysisPanel extends JPanel {
         add(panel7, gbc);
 
     }
+
 }

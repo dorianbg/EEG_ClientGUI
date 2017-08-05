@@ -2,7 +2,7 @@
   <artifact type="jar" name="EEG_WorkflowGUI:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/EEG_WorkflowGUI_jar</output-path>
     <root id="archive" name="EEG_WorkflowGUI.jar">
-      <element id="module-output" name="EEG_WorkflowGUI" />
+      <element id="module-output" name="Workflow_GUI" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/hadoop/hadoop-common/2.6.0/hadoop-common-2.6.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/zookeeper/zookeeper/3.4.6/zookeeper-3.4.6.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/codehaus/jackson/jackson-jaxrs/1.9.13/jackson-jaxrs-1.9.13.jar" path-in-jar="/" />
