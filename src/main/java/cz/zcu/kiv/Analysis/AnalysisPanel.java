@@ -287,6 +287,11 @@ public class AnalysisPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 CardLayout cardLayout = (CardLayout) (panel4.getLayout());
                 cardLayout.show(panel4, "LOAD");
+                WebResource webResourceClient = loadClient.resource("http://localhost:8080").path("/classifiers/list");
+                ClientResponse responseMsg = webResourceClient.get(ClientResponse.class);  // you just change this call from post to get
+                String[] queries1 = responseMsg.getEntity(String.class).replace('[',' ').replace(']',' ').split(",");
+                loadClfList.setListData(queries1);
+
             }
         });
 
@@ -333,7 +338,7 @@ public class AnalysisPanel extends JPanel {
                 if (loadButton.isSelected()) {
                     String value = loadClfList.getSelectedValue().toString();
                     queryParams.put("load_clf", value.substring(1, value.indexOf("_")));
-                    queryParams.put("load_name", value.substring(1,value.length()));
+                    queryParams.put("load_name", value.substring(1,value.length()).replaceAll(" ", "").replaceAll("\n","").replaceAll("\t",""));
                 } else if (trainButton.isSelected()) {
                     String value = trainClfList.getSelectedValue().toString();
                     String clfAbbreviation = "";
@@ -346,7 +351,7 @@ public class AnalysisPanel extends JPanel {
                     } else if (value.equals("Decision Tree")) {
                         clfAbbreviation = "dt";
                     } else if (value.equals("Neural Network")) {
-                        clfAbbreviation = "svm";
+                        clfAbbreviation = "nn";
                     } else {
                         clfAbbreviation = "";
                     }
@@ -354,7 +359,7 @@ public class AnalysisPanel extends JPanel {
                     queryParams.put("train_clf", clfAbbreviation);
                     if (saveClassifierCheckBox.isSelected()) {
                         queryParams.put("save_clf", "true");
-                        queryParams.put("save_name", clfAbbreviation + "_"+ classifierNameJTextField.getText() );
+                        queryParams.put("save_name", clfAbbreviation + "_"+ classifierNameJTextField.getText().replaceAll("[^a-zA-Z0-9]", "_"));
                     }
                 } else {
                     throw new IllegalArgumentException("Please select train or load a classifier button");

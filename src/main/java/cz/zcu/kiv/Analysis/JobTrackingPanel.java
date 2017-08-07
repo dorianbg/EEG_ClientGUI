@@ -101,11 +101,17 @@ public class JobTrackingPanel extends JPanel {
         JTextArea classifierInfo = new JTextArea(150,20);
         classifierInfo.setEditable(false);
         if(queryParams.containsKey("load_clf")){
+            logger.info("Getting the job configuration");
             WebResource webResource = client.resource("http://localhost:8080").path("/jobs/configuration/" + queryParams.get("load_name"));
+            String uri = webResource.getURI().toString();
+            logger.info("load_name is " + queryParams.get("load_name"));
+            logger.info("Request URI is " + uri);
             ClientResponse responseMsg = webResource.get(ClientResponse.class);  // you just change this call from post to get
             String text = responseMsg.getEntity(String.class);
+            logger.info("Job configuration is " + text);
             text = text.replace("/////","\n");
             classifierInfo.setText(text);
+            logger.info("Set the text of the text area");
         }
         else{
             classifierInfo.setText(hashMapToText(queryParams));
