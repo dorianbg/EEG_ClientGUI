@@ -18,7 +18,7 @@ The application provides the user with a generic screen capable of:
 - analyzing data using the ANALYZE button
 
 Demo of the screen:
-![1](https://user-images.githubusercontent.com/16664769/29004325-edf870f2-7ac5-11e7-845b-341fe69af471.png)
+![](https://user-images.githubusercontent.com/16664769/29004325-edf870f2-7ac5-11e7-845b-341fe69af471.png =250x250)
 
 ### Data analysis  
 
