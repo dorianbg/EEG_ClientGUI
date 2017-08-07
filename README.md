@@ -17,8 +17,12 @@ The application provides the user with a generic screen capable of:
 - deleting a file or recursively deleting a folder using the DELETE button
 - analyzing data using the ANALYZE button
 
-Demo of the screen:  
-<img src="https://user-images.githubusercontent.com/16664769/29004325-edf870f2-7ac5-11e7-845b-341fe69af471.png" width="350" height="350" />
+Demo of the screen:    
+
+<img src="https://user-images.githubusercontent.com/16664769/29004325-edf870f2-7ac5-11e7-845b-341fe69af471.png" width="450" height="450" />
+  
+  
+
 ### Data analysis  
 
 ##### Building data analysis jobs 
