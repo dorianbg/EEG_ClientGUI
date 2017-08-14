@@ -1,6 +1,7 @@
 package cz.zcu.kiv.Analysis.Config;
 
 import cz.zcu.kiv.Const;
+import org.apache.commons.codec.binary.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -80,6 +81,7 @@ public class DecisionTreeConfigScreen extends JPanel {
         label4.setPreferredSize(new Dimension((int)(Const.screenSizeWidth*2/6),(int)(Const.screenSizeHeight*1/24)));
         String[] choices = {"gini", "entropy"};
         final JComboBox impurityComboBox = new JComboBox(choices);
+        impurityComboBox.setSelectedItem(config.get("config_impurity"));
         JPanel panel4 = new JPanel(new BorderLayout());
         panel4.add(label4,BorderLayout.WEST);
         panel4.add(impurityComboBox,BorderLayout.EAST);
@@ -94,10 +96,45 @@ public class DecisionTreeConfigScreen extends JPanel {
                 minInstancesPerNode = textField3.getText();
                 impurity = String.valueOf(impurityComboBox.getSelectedItem());
 
-                config.put("config_max_depth", maxDepth);
-                config.put("config_max_bins", maxBins);
-                config.put("config_min_instances_per_node", minInstancesPerNode);
-                config.put("config_impurity", impurity);
+                boolean flag = true;
+                try{
+                    int num = Integer.parseInt(maxDepth);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(DecisionTreeConfigScreen.this,"Please insert an positive integer as max depth parameter");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(DecisionTreeConfigScreen.this,"Please insert an positive integer as max depth parameter");
+                }
+                try{
+                    int num = Integer.parseInt(maxBins);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(DecisionTreeConfigScreen.this,"Please insert an positive integer as max bins parameter");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(DecisionTreeConfigScreen.this,"Please insert an integer as max bins parameter");
+                }
+                try{
+                    int num = Integer.parseInt(minInstancesPerNode);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(DecisionTreeConfigScreen.this,"Please insert an positive integer as min instances per node");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(DecisionTreeConfigScreen.this,"Please insert an positive integer as min instances per node");
+                }
+
+
+                if(flag){
+                    config.put("config_max_depth", maxDepth);
+                    config.put("config_max_bins", maxBins);
+                    config.put("config_min_instances_per_node", minInstancesPerNode);
+                    config.put("config_impurity", impurity);
+                }
 
             }
         });

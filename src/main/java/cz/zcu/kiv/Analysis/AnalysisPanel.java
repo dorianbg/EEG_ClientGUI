@@ -3,10 +3,7 @@ package cz.zcu.kiv.Analysis;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-import cz.zcu.kiv.Analysis.Config.DecisionTreeConfigScreen;
-import cz.zcu.kiv.Analysis.Config.LogRegConfigScreen;
-import cz.zcu.kiv.Analysis.Config.RandomForestConfigScreen;
-import cz.zcu.kiv.Analysis.Config.SVMConfigScreen;
+import cz.zcu.kiv.Analysis.Config.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -17,8 +14,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
-import static cz.zcu.kiv.Const.screenSizeHeight;
-import static cz.zcu.kiv.Const.screenSizeWidth;
+import static cz.zcu.kiv.Const.*;
 
 /***********************************************************************************************************************
  *
@@ -119,7 +115,7 @@ public class AnalysisPanel extends JPanel {
          */
 
         final Client loadClient = Client.create();
-        WebResource webResourceClient = loadClient.resource("http://localhost:8080").path("/classifiers/list");
+        WebResource webResourceClient = loadClient.resource(serverConnectionUri).path("/classifiers/list");
         ClientResponse responseMsg = webResourceClient.get(ClientResponse.class);  // you just change this call from post to get
         String[] queries1 = responseMsg.getEntity(String.class).replace('[',' ').replace(']',' ').split(",");
 
@@ -186,7 +182,20 @@ public class AnalysisPanel extends JPanel {
                         config.put("config_impurity", "gini");
                         config.put("config_feature_subset", "auto");
                         config.put("config_num_trees", "100");
-                    } else {
+                    } else if(value.equals("Neural Network")) {
+                        config.clear();
+                        config.put("config_seed", "12345");
+                        config.put("config_num_iterations", "1000");
+                        config.put("config_learning_rate", "0.1");
+                        config.put("config_momentum", "0.5");
+                        config.put("config_weight_init", "xavier");
+                        config.put("config_updater", "nesterovs");
+                        config.put("config_optimization_algo", "conjugate_gradient");
+                        config.put("config_loss_function", "xent");
+                        config.put("config_pretrain", "false");
+                        config.put("config_backprop", "true");
+                    }
+                    else{
 
                     }
                 }
@@ -208,6 +217,12 @@ public class AnalysisPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 final JFrame frame = new JFrame();
+                frame.setSize((int) screenSizeWidth / 3, (int) (screenSizeHeight * 1 / 2));
+                frame.setResizable(true);
+                frame.setLocationByPlatform(true);
+                frame.setLocationRelativeTo(null);
+                frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
                 if (trainClfList.getSelectedValue().toString().equals("Logistic Regression")) {
                     frame.add(new LogRegConfigScreen(config));
                 } else if (trainClfList.getSelectedValue().toString().equals("Support Vector Machine")) {
@@ -216,14 +231,14 @@ public class AnalysisPanel extends JPanel {
                     frame.add(new DecisionTreeConfigScreen(config));
                 } else if (trainClfList.getSelectedValue().toString().equals("Random Forest")) {
                     frame.add(new RandomForestConfigScreen(config));
+                } else if (trainClfList.getSelectedValue().toString().equals("Neural Network")) {
+                    frame.setSize((int) screenSizeWidth * 1/2, (int) (screenSizeHeight * 2 / 3));
+
+                    JPanel creatingPanel = new NeuralNetworkConfigScreen(config);
+                    frame.add(creatingPanel);
                 } else {
 
                 }
-                frame.setSize((int) screenSizeWidth / 3, (int) (screenSizeHeight * 1 / 2));
-                frame.setResizable(true);
-                frame.setLocationByPlatform(true);
-                frame.setLocationRelativeTo(null);
-                frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                 frame.setVisible(true);
                 // set the escape button
                 KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
@@ -287,7 +302,7 @@ public class AnalysisPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 CardLayout cardLayout = (CardLayout) (panel4.getLayout());
                 cardLayout.show(panel4, "LOAD");
-                WebResource webResourceClient = loadClient.resource("http://localhost:8080").path("/classifiers/list");
+                WebResource webResourceClient = loadClient.resource(serverConnectionUri).path("/classifiers/list");
                 ClientResponse responseMsg = webResourceClient.get(ClientResponse.class);  // you just change this call from post to get
                 String[] queries1 = responseMsg.getEntity(String.class).replace('[',' ').replace(']',' ').split(",");
                 loadClfList.setListData(queries1);
@@ -375,7 +390,7 @@ public class AnalysisPanel extends JPanel {
 
 
                 final Client client = Client.create();
-                WebResource webResource = client.resource("http://localhost:8080").path("/jobs/submit/" + jobId);
+                WebResource webResource = client.resource(serverConnectionUri).path("/jobs/submit/" + jobId);
                 for (Map.Entry<String, String> entry : queryParams.entrySet()) {
                     webResource = webResource.queryParam(entry.getKey(), entry.getValue());
                 }
@@ -403,7 +418,7 @@ public class AnalysisPanel extends JPanel {
                                 == JOptionPane.YES_OPTION)
                         {
                             logger.info("Closing the window");
-                            WebResource webResource = client.resource("http://localhost:8080").path("/jobs/cancel/" + jobId);
+                            WebResource webResource = client.resource(serverConnectionUri).path("/jobs/cancel/" + jobId);
                             ClientResponse responseMsg = webResource.get(ClientResponse.class);  // you just change this call from post to get
                             logger.info("Cancelled the job");
                         }

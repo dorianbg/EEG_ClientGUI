@@ -85,6 +85,7 @@ public class RandomForestConfigScreen extends JPanel {
         label4.setPreferredSize(new Dimension((int)(Const.screenSizeWidth*2/6),(int)(Const.screenSizeHeight*1/24)));
         String[] choices = {"gini", "entropy"};
         final JComboBox impurityComboBox = new JComboBox(choices);
+        impurityComboBox.setSelectedItem(config.get("config_impurity"));
         JPanel panel4 = new JPanel(new BorderLayout());
         panel4.add(label4,BorderLayout.WEST);
         panel4.add(impurityComboBox,BorderLayout.EAST);
@@ -101,6 +102,7 @@ public class RandomForestConfigScreen extends JPanel {
         label6.setPreferredSize(new Dimension((int)(Const.screenSizeWidth*2/6),(int)(Const.screenSizeHeight*1/24)));
         String[] fssChoices = {"auto", "all", "sqrt", "log2"};
         final JComboBox featureSubsetComboBox = new JComboBox(fssChoices);
+        featureSubsetComboBox.setSelectedItem(config.get("config_feature_subset"));
         JPanel panel6 = new JPanel(new BorderLayout());
         panel6.add(label6,BorderLayout.WEST);
         panel6.add(featureSubsetComboBox,BorderLayout.EAST);
@@ -117,14 +119,59 @@ public class RandomForestConfigScreen extends JPanel {
                 numTrees = textField5.getText();
                 featureSubset = String.valueOf(featureSubsetComboBox.getSelectedItem());
 
-                config.put("config_max_depth", maxDepth);
-                config.put("config_max_bins", maxBins);
-                config.put("config_min_instances_per_node", minInstancesPerNode);
-                config.put("config_impurity", impurity);
-                config.put("config_num_trees", numTrees);
-                config.put("config_feature_subset", featureSubset);
+
+                boolean flag = true;
+                try{
+                    int num = Integer.parseInt(maxDepth);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(RandomForestConfigScreen.this,"Please insert an positive integer as max depth parameter");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(RandomForestConfigScreen.this,"Please insert an positive integer as max depth parameter");
+                }
+                try{
+                    int num = Integer.parseInt(maxBins);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(RandomForestConfigScreen.this,"Please insert an positive integer as max bins parameter");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(RandomForestConfigScreen.this,"Please insert an integer as max bins parameter");
+                }
+                try{
+                    int num = Integer.parseInt(minInstancesPerNode);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(RandomForestConfigScreen.this,"Please insert an positive integer as min instances per node");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(RandomForestConfigScreen.this,"Please insert an positive integer as min instances per node");
+                }
+                try{
+                    int num = Integer.parseInt(numTrees);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(RandomForestConfigScreen.this,"Please insert an positive integer as number of trees");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(RandomForestConfigScreen.this,"Please insert an positive integer as number of trees");
+                }
 
 
+
+                if(flag) {
+                    config.put("config_max_depth", maxDepth);
+                    config.put("config_max_bins", maxBins);
+                    config.put("config_min_instances_per_node", minInstancesPerNode);
+                    config.put("config_impurity", impurity);
+                    config.put("config_num_trees", numTrees);
+                    config.put("config_feature_subset", featureSubset);
+                }
             }
         });
 

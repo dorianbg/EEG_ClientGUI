@@ -93,10 +93,69 @@ public class SVMConfigScreen extends JPanel {
                 config_num_iterations = textField2.getText();
                 config_reg_param = textField3.getText();
                 config_mini_batch_fraction = textField4.getText();
-                config.put("config_step_size", config_step_size);
-                config.put("config_num_iterations", config_num_iterations);
-                config.put("config_reg_param", config_reg_param);
-                config.put("config_mini_batch_fraction", config_mini_batch_fraction);
+
+
+                boolean flag = true;
+                try{
+                    double num = Double.parseDouble(config_step_size);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double as step size");
+                    }
+                    if(num>1){
+                        flag = false;
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert a double less than 1 as step size");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive integer as step size");
+                }
+                try{
+                    int num = Integer.parseInt(config_num_iterations);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive integer as num iterations");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an integer as num iterations");
+                }
+                try{
+                    double num = Double.parseDouble(config_mini_batch_fraction);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double as mini batch fraction");
+                    }
+                    if(num > 1){
+                        flag = false;
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double less than 1 as mini batch fraction");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double as mini batch fraction");
+                }
+                try{
+                    double num = Double.parseDouble(config_reg_param);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double as reg param");
+                    }
+                    if(num > 1){
+                        flag = false;
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double less than 1 as reg param");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double as reg param");
+                }
+
+
+                if(flag){
+                    config.put("config_step_size", config_step_size);
+                    config.put("config_num_iterations", config_num_iterations);
+                    config.put("config_reg_param", config_reg_param);
+                    config.put("config_mini_batch_fraction", config_mini_batch_fraction);
+                }
             }
         });
 

@@ -31,6 +31,8 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 
+import static cz.zcu.kiv.Const.serverConnectionUri;
+
 
 public class JerseyRESTClient {
 
@@ -39,7 +41,7 @@ public class JerseyRESTClient {
         Client client = Client.create();
         int jobId = 10001;
 
-        WebResource webResource = client.resource("http://localhost:8080");
+        WebResource webResource = client.resource(serverConnectionUri);
         ClientResponse responseMsg = webResource.path("/jobs/submit/" + jobId)
                 .queryParam("config_reg_param", "0.01")
                 .queryParam("config_mini_batch_fraction", "1.0")
