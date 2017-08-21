@@ -6,6 +6,11 @@ The application consists of two parts
 
 Note: Please check the wiki section of this repository to see solutions to common issues that might occur
 
+
+Demo of the application: 
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/48r53zLVOLM/0.jpg)](https://www.youtube.com/watch?v=48r53zLVOLM)
+
 ### Data management
 
 The application provides the user with a generic screen capable of: 
@@ -37,3 +42,10 @@ When loading a classifier, the user can choose from a list of implemeted classif
 namely: Decision Tree classifier, Random Forest classifier, Support Vector Machine classifier, Logistic Regression classifier.   
 
 ##### Tracking the execution of jobs
+
+In the job tracking panel you can:   
+ - see the status of the job
+ - check the execution logs on the remote server
+ - check the job result once the job has finished
+ - review the input parameters of the job
+

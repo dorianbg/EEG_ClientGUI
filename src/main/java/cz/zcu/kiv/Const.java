@@ -6,6 +6,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import java.awt.*;
 import java.io.File;
@@ -45,6 +46,11 @@ public class Const {
     // if you get an error with initializing preferences on windows see https://stackoverflow.com/questions/16428098/groovy-shell-warning-could-not-open-create-prefs-root-node
     private static Preferences preferences = Preferences.userRoot().node(Const.class.getName());
     public static final String hadoopSeparator = "/";
+
+
+    public static final String localhostUri = "http://localhost:8990";
+    public static final String remoteHostUri = "http://147.228.63.46:8990";
+    public static String serverConnectionUri;
 
     public static String localSeparator = "";
     public static String uriPrefix;
@@ -104,8 +110,10 @@ public class Const {
 
             logger.info("Successfully read the preferences");
             if (useLocalMode.equals("true")) {
+                serverConnectionUri = localhostUri;
                 uriPrefix = localUriPrefix;
             } else {
+                serverConnectionUri = remoteHostUri;
                 uriPrefix = remoteUriPrefix;
             }
             logPreferences();
@@ -148,8 +156,20 @@ public class Const {
             conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
             conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
             conf.set("fs.swebhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName());
-
             conf.setBoolean("fs.automatic.close", true);
+
+            /*
+            conf.set("hadoop.security.authentication", "kerberos");
+            conf.set("dfs.namenode.kerberos.principal.pattern", "hdfs/quickstart.cloudera@CLOUDERA");
+
+            UserGroupInformation.setConfiguration(conf);
+            try {
+                UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            */
+
             try {
                 fileSystem = FileSystem.get(URI.create(uriPrefix + homeDirectory), conf);
             } catch (IOException e) {

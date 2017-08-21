@@ -1,7 +1,6 @@
-package cz.zcu.kiv.Analysis.Config;
+package cz.zcu.kiv.Analysis.ConfigPanels;
 
 import cz.zcu.kiv.Const;
-import org.apache.commons.codec.binary.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;

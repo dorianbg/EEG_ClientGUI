@@ -1,4 +1,4 @@
-package cz.zcu.kiv.Analysis.Config;
+package cz.zcu.kiv.Analysis.ConfigPanels;
 
 import cz.zcu.kiv.Const;
 

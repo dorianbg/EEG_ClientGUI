@@ -3,7 +3,7 @@ package cz.zcu.kiv.Analysis;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-import cz.zcu.kiv.Analysis.Config.*;
+import cz.zcu.kiv.Analysis.ConfigPanels.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -98,7 +98,7 @@ public class AnalysisPanel extends JPanel {
          * 2nd row -> choose feature extraction method
          */
         JLabel label2 = new JLabel("Feature extraction method  ");
-        String[] choices = {"dwt-8", "CHOICE 2"};
+        String[] choices = {"dwt-8"};
         final JComboBox featureExtractionComboBox = new JComboBox(choices);
         featureExtractionComboBox.setPreferredSize(new Dimension(400, 30));
         JPanel featureExtractionRow = new JPanel(new BorderLayout());
@@ -383,12 +383,7 @@ public class AnalysisPanel extends JPanel {
                 // add config params
                 queryParams.putAll(config);
 
-                // result path
-                queryParams.put("result_path", System.getProperty("user.home") + "/spark_server/results/" + jobId + ".txt");
-
                 //create the client connection
-
-
                 final Client client = Client.create();
                 WebResource webResource = client.resource(serverConnectionUri).path("/jobs/submit/" + jobId);
                 for (Map.Entry<String, String> entry : queryParams.entrySet()) {

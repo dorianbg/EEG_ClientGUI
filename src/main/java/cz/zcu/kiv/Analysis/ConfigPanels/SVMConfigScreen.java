@@ -1,4 +1,4 @@
-package cz.zcu.kiv.Analysis.Config;
+package cz.zcu.kiv.Analysis.ConfigPanels;
 
 import cz.zcu.kiv.Const;
 
@@ -29,25 +29,27 @@ import java.util.HashMap;
  *
  ***********************************************************************************************************************
  *
- * LogRegConfigScreen, 2017/07/26 16:03 dbg
+ * SVMConfigScreen, 2017/07/26 16:03 dbg
  *
  **********************************************************************************************************************/
-public class LogRegConfigScreen extends JPanel {
+public class SVMConfigScreen extends JPanel {
     private HashMap<String, String> config;
     private String config_step_size;
     private String config_num_iterations;
+    private String config_reg_param;
     private String config_mini_batch_fraction;
 
-    public LogRegConfigScreen(HashMap<String, String> config){
+    public SVMConfigScreen(HashMap<String, String> config){
         this.config = config;
         this.config_step_size = config.get("config_step_size");
         this.config_num_iterations = config.get("config_num_iterations");
+        this.config_reg_param = config.get("config_reg_param");
         this.config_mini_batch_fraction = config.get("config_mini_batch_fraction");
         initializePanel();
     }
 
     private void initializePanel(){
-        setLayout(new GridLayout(4,1,1,1));
+        setLayout(new GridLayout(5,1,1,1));
 
         // 1st row
         JLabel label1 = new JLabel("Step size");
@@ -65,6 +67,14 @@ public class LogRegConfigScreen extends JPanel {
         JPanel panel2 = new JPanel(new BorderLayout());
         panel2.add(label2,BorderLayout.WEST);
         panel2.add(textField2,BorderLayout.EAST);
+        // 3rd row
+        JLabel label3 = new JLabel("Regularization parameter");
+        label3.setPreferredSize(new Dimension((int)(Const.screenSizeWidth*2/6),(int)(Const.screenSizeHeight*1/24)));
+        final JTextField textField3 = new JTextField(config_reg_param);
+        textField3.setPreferredSize(new Dimension((int)(Const.screenSizeWidth*1/6),(int)(Const.screenSizeHeight*1/24)));
+        JPanel panel3 = new JPanel(new BorderLayout());
+        panel3.add(label3,BorderLayout.WEST);
+        panel3.add(textField3,BorderLayout.EAST);
         // 4th row
         JLabel label4 = new JLabel("Mini batch fraction");
         label4.setPreferredSize(new Dimension((int)(Const.screenSizeWidth*2/6),(int)(Const.screenSizeHeight*1/24)));
@@ -81,6 +91,7 @@ public class LogRegConfigScreen extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 config_step_size = textField1.getText();
                 config_num_iterations = textField2.getText();
+                config_reg_param = textField3.getText();
                 config_mini_batch_fraction = textField4.getText();
 
 
@@ -89,44 +100,60 @@ public class LogRegConfigScreen extends JPanel {
                     double num = Double.parseDouble(config_step_size);
                     if(num<0){
                         flag = false;
-                        JOptionPane.showMessageDialog(LogRegConfigScreen.this,"Please insert an positive double as step size");
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double as step size");
                     }
                     if(num>1){
                         flag = false;
-                        JOptionPane.showMessageDialog(LogRegConfigScreen.this,"Please insert a double less than 1 as step size");
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert a double less than 1 as step size");
                     }
                 } catch (NumberFormatException e1) {
                     flag = false;
-                    JOptionPane.showMessageDialog(LogRegConfigScreen.this,"Please insert an positive integer as step size");
+                    JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive integer as step size");
                 }
                 try{
                     int num = Integer.parseInt(config_num_iterations);
                     if(num<0){
                         flag = false;
-                        JOptionPane.showMessageDialog(LogRegConfigScreen.this,"Please insert an positive integer as num iterations");
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive integer as num iterations");
                     }
                 } catch (NumberFormatException e1) {
                     flag = false;
-                    JOptionPane.showMessageDialog(LogRegConfigScreen.this,"Please insert an integer as num iterations");
+                    JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an integer as num iterations");
                 }
                 try{
                     double num = Double.parseDouble(config_mini_batch_fraction);
                     if(num<0){
                         flag = false;
-                        JOptionPane.showMessageDialog(LogRegConfigScreen.this,"Please insert an positive double as mini batch fraction");
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double as mini batch fraction");
                     }
                     if(num > 1){
                         flag = false;
-                        JOptionPane.showMessageDialog(LogRegConfigScreen.this,"Please insert an positive double less than 1 as mini batch fraction");
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double less than 1 as mini batch fraction");
                     }
                 } catch (NumberFormatException e1) {
                     flag = false;
-                    JOptionPane.showMessageDialog(LogRegConfigScreen.this,"Please insert an positive double as mini batch fraction");
+                    JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double as mini batch fraction");
+                }
+                try{
+                    double num = Double.parseDouble(config_reg_param);
+                    if(num<0){
+                        flag = false;
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double as reg param");
+                    }
+                    if(num > 1){
+                        flag = false;
+                        JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double less than 1 as reg param");
+                    }
+                } catch (NumberFormatException e1) {
+                    flag = false;
+                    JOptionPane.showMessageDialog(SVMConfigScreen.this,"Please insert an positive double as reg param");
                 }
 
-                if(flag) {
+
+                if(flag){
                     config.put("config_step_size", config_step_size);
                     config.put("config_num_iterations", config_num_iterations);
+                    config.put("config_reg_param", config_reg_param);
                     config.put("config_mini_batch_fraction", config_mini_batch_fraction);
                 }
             }
@@ -134,6 +161,7 @@ public class LogRegConfigScreen extends JPanel {
 
         add(panel1);
         add(panel2);
+        add(panel3);
         add(panel4);
         add(button);
     }
