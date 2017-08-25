@@ -54,6 +54,7 @@ public class AnalysisPanel extends JPanel {
      */
     public AnalysisPanel(String infoFileName) {
         this.infoFileName = infoFileName;
+        logger.info("Starting analysis panel with infoFileName= " + infoFileName);
         this.eegFileName = "";
         this.guessedNumber = -100;
         initializePanel();
@@ -66,9 +67,13 @@ public class AnalysisPanel extends JPanel {
      * @param guessedNumber guessed number
      */
     public AnalysisPanel(String eegFileName, int guessedNumber) {
+        logger.info("initializing a new Analysis Panel");
         this.infoFileName = "";
         this.eegFileName = eegFileName;
+        logger.info("Starting analysis panel with eeg file name= " + eegFileName);
         this.guessedNumber = guessedNumber;
+        logger.info("Starting analysis panel with guessed number= " + guessedNumber);
+
         initializePanel();
     }
 
@@ -85,9 +90,9 @@ public class AnalysisPanel extends JPanel {
         if (infoFileName.length() == 0) {
             fileName = eegFileName;
         } else {
-            infoFileName = infoFileName;
+            fileName = infoFileName;
         }
-        final JTextField textField1 = new JTextField(infoFileName);
+        final JTextField textField1 = new JTextField(fileName);
         textField1.setEditable(false);
         textField1.setPreferredSize(new Dimension(400, 30));
         final JPanel filenameRow = new JPanel(new BorderLayout());

@@ -1,11 +1,14 @@
 package cz.zcu.kiv;
 
+import cz.zcu.kiv.Analysis.ConfigPanels.NeuralNetworkConfigScreen;
 import cz.zcu.kiv.DataUploading.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.prefs.Preferences;
@@ -79,6 +82,12 @@ public class SettingsPanel extends JPanel {
         } else {
             jCheckBox.setSelected(false);
         }
+        jCheckBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JOptionPane.showMessageDialog(SettingsPanel.this,"Please restart the application for this change to take effect");
+            }
+        });
         jCheckBox.setPreferredSize(new Dimension(400, 30));
         JPanel panel4 = new JPanel(new BorderLayout());
         panel4.add(label4, BorderLayout.WEST);

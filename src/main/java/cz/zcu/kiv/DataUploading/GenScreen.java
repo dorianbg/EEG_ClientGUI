@@ -21,6 +21,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static cz.zcu.kiv.Const.screenSizeHeight;
 import static cz.zcu.kiv.Const.screenSizeWidth;
@@ -59,6 +60,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
     private JFrame jFrameParent;
     // initialize contents of the table as empty
     private String[][] data;
+    private String[][] tempArray;
     // these are the predefined columns
     private final String[] columns = HadoopHdfsController.columns;
     // table model ie. the data stored in the table
@@ -187,7 +189,9 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         });
 
 
-        // 2. filter text field
+        /*
+         2. filter text field
+          */
         final JTextField jTextField = new JTextField();
         jTextField.getDocument().addDocumentListener(new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
@@ -214,7 +218,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                         tempData.add(file);
                     }
                 }
-                String[][] tempArray = new String[tempData.size()][5];
+                tempArray = new String[tempData.size()][5];
                 for (int i = 0; i < tempData.size(); i++) {
                     tempArray[i] = tempData.get(i);
                 }
@@ -223,7 +227,9 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
             }
         });
 
-        // 3. analyze button
+        /*
+         3. analyze button
+          */
         JButton analyzeButton = new JButton("ANALYZE");
         analyzeButton.addActionListener(new ActionListener() {
             @Override
@@ -238,10 +244,17 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 }
                 // isolate the filename from the path
                 String cleanFileName = "";
-                if (data[table.getSelectedRow()][0].startsWith("/")) {
-                    cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/", "");
+
+                DefaultTableModel dtm = (DefaultTableModel) table.getModel();
+                int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
+                String[][] tableData = new String[nRow][nCol];
+                for (int i = 0 ; i < nRow ; i++)
+                    for (int j = 0 ; j < nCol ; j++)
+                        tableData[i][j] = String.valueOf(dtm.getValueAt(i,j));
+                if (tableData[table.getSelectedRow()][0].startsWith("/")) {
+                    cleanFileName = tableData[table.getSelectedRow()][0].replaceFirst("/", "");
                 } else {
-                    cleanFileName = data[table.getSelectedRow()][0];
+                    cleanFileName = tableData[table.getSelectedRow()][0];
                 }
                 // create the "clean" path value
                 String cleanNewPath = cleanPath + Const.hadoopSeparator + cleanFileName;

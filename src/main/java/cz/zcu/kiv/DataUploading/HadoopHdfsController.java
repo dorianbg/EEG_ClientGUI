@@ -68,6 +68,7 @@ public class HadoopHdfsController {
 
                     // list files in a folder
                     FileStatus[] files = fs.listStatus(new Path(uri));
+                    logger.info("Listing files in folder " + screen.getPath());
 
                     // create the data array for JTable
                     data = new String[files.length][columns.length];
@@ -109,6 +110,7 @@ public class HadoopHdfsController {
                 final int[] sel = screen.getJTable().getSelectedRows();
 
                 screen.setData(fullData);
+                logger.info("Listed files in folder " + screen.getPath());
                 logger.info("Set the hadoop data (String[][]) matrix onto JTable ");
 
                 screen.getTableModel().setDataVector(fullData, columns);

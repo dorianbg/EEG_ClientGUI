@@ -103,9 +103,9 @@ public class Const {
      */
     static void initializeValues() {
         {
-            homeDirectory = preferences.get("homeDirectory", "/user/digitalAssistanceSystem/data/numbers");
+            homeDirectory = preferences.get("homeDirectory", "/user/digitalAssistanceSystem");
             localUriPrefix = preferences.get("localUriPrefix", "hdfs://localhost:8020");
-            remoteUriPrefix = preferences.get("remoteUriPrefix", "webhdfs://147.228.63.46:50070");
+            remoteUriPrefix = preferences.get("remoteUriPrefix", "webhdfs://quickstart.cloudera:50070");
             useLocalMode = preferences.get("useLocalMode", "false");
 
             logger.info("Successfully read the preferences");
@@ -156,19 +156,22 @@ public class Const {
             conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
             conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
             conf.set("fs.swebhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName());
+            conf.set("fs.webhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName());
             conf.setBoolean("fs.automatic.close", true);
 
-            /*
-            conf.set("hadoop.security.authentication", "kerberos");
-            conf.set("dfs.namenode.kerberos.principal.pattern", "hdfs/quickstart.cloudera@CLOUDERA");
+            if(useLocalMode.equals("false")){
+                conf.set("hadoop.security.authentication", "kerberos");
+                conf.set("dfs.namenode.kerberos.principal.pattern", "hdfs/quickstart.cloudera@CLOUDERA");
 
-            UserGroupInformation.setConfiguration(conf);
-            try {
-                UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
-            } catch (IOException e) {
-                e.printStackTrace();
+
+                UserGroupInformation.setConfiguration(conf);
+                try {
+                    UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            */
+
 
             try {
                 fileSystem = FileSystem.get(URI.create(uriPrefix + homeDirectory), conf);
@@ -183,11 +186,13 @@ public class Const {
      * used when the user chooses local mode (in the setting panel)
      */
     public static void changeFileSystem() {
+        /*
         if (fileSystem != null) {
             Configuration conf = new Configuration();
             conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
             conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
             conf.set("fs.swebhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName()); // a crazy fix
+            conf.set("fs.webhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName());
 
             conf.setBoolean("fs.automatic.close", true);
             try {
@@ -196,6 +201,12 @@ public class Const {
                 e.printStackTrace();
             }
         }
+
+         */
+        logPreferences();
+        fileSystem = null;
+        initializeValues();
+        getHadoopFileSystem();
         logPreferences();
     }
 
