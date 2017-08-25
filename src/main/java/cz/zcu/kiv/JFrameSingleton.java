@@ -65,6 +65,7 @@ public class JFrameSingleton {
 
                 @Override
                 public void windowClosing(WindowEvent e) {
+                    // this error is also harmless
                     try {
                         Const.getHadoopFileSystem().close();
                         logger.info("FileSystem Closed");

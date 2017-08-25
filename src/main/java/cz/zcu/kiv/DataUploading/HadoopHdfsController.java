@@ -64,30 +64,26 @@ public class HadoopHdfsController {
 
                 String uri = uriPrefix + path;
                 FileSystem fs = Const.getHadoopFileSystem();
-                try {
 
-                    // list files in a folder
-                    FileStatus[] files = fs.listStatus(new Path(uri));
-                    logger.info("Listing files in folder " + screen.getPath());
+                // list files in a folder
+                FileStatus[] files = fs.listStatus(new Path(uri));
+                logger.info("Listing files in folder " + screen.getPath());
 
-                    // create the data array for JTable
-                    data = new String[files.length][columns.length];
+                // create the data array for JTable
+                data = new String[files.length][columns.length];
 
-                    for (int i = 0; i < files.length; i++) {
-                        // 1. filename
-                        data[i][0] = files[i].getPath().toString().substring(files[i].getPath().toString().lastIndexOf(Const.hadoopSeparator)).replaceFirst(Const.hadoopSeparator, "");
-                        // 2. fileowner
-                        data[i][1] = files[i].getOwner();
-                        // 3. folder/file size
-                        data[i][2] = Long.toString(files[i].getLen() / 1024) + " kb";
-                        //data[i][2]= Long.toString(fs.getContentSummary(files[i].getPath()).getSpaceConsumed() / (1024 * 1024)) + " mb";
-                        // data modified
-                        data[i][3] = new SimpleDateFormat("dd.MM.yyyy").format(new java.util.Date(files[i].getModificationTime()));
-                    }
-
-                } catch (Exception e) {
-                    logger.info(e.getMessage());
+                for (int i = 0; i < files.length; i++) {
+                    // 1. filename
+                    data[i][0] = files[i].getPath().toString().substring(files[i].getPath().toString().lastIndexOf(Const.hadoopSeparator)).replaceFirst(Const.hadoopSeparator, "");
+                    // 2. fileowner
+                    data[i][1] = files[i].getOwner();
+                    // 3. folder/file size
+                    data[i][2] = Long.toString(files[i].getLen() / 1024) + " kb";
+                    //data[i][2]= Long.toString(fs.getContentSummary(files[i].getPath()).getSpaceConsumed() / (1024 * 1024)) + " mb";
+                    // data modified
+                    data[i][3] = new SimpleDateFormat("dd.MM.yyyy").format(new java.util.Date(files[i].getModificationTime()));
                 }
+
                 return data;
             }
 
@@ -98,12 +94,15 @@ public class HadoopHdfsController {
                 logger.info("Created the data (String[][] matrix) for hadoop data");
 
                 String[][] fullData = null;
+                // this is a concurrent execution error, should probably never happen
                 try {
                     fullData = get();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    logger.error(e.getMessage());
+                    JOptionPane.showMessageDialog(null, e.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                 } catch (ExecutionException e) {
-                    e.printStackTrace();
+                    logger.error(e.getMessage());
+                    JOptionPane.showMessageDialog(null, e.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
 
 
@@ -187,14 +186,10 @@ public class HadoopHdfsController {
      * @param filePath path on which to delete the files
      * @param fs       filesystem on which to delete the files
      */
-    public static void deleteFile(String filePath, FileSystem fs) {
+    public static void deleteFile(String filePath, FileSystem fs) throws IOException {
         logger.info("Deleting file " + filePath);
-        try {
             // the false flags means you can only delete files and not folders
-            fs.delete(new Path(filePath), true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        fs.delete(new Path(filePath), true);
     }
 
 

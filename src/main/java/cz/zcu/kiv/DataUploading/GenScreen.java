@@ -20,6 +20,7 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -113,22 +114,6 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         };
         table.setModel(tableModel);
         table.setRowHeight(30);
-        /*
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-
-        table.getColumnModel().getColumn(0).setMinWidth(500);
-        table.getColumnModel().getColumn(0).setPreferredWidth(500);
-        table.getColumnModel().getColumn(0).setMaxWidth(500);
-        table.getColumnModel().getColumn(1).setMinWidth(100);
-        table.getColumnModel().getColumn(1).setPreferredWidth(100);
-        table.getColumnModel().getColumn(1).setMaxWidth(100);
-        table.getColumnModel().getColumn(2).setMinWidth(100);
-        table.getColumnModel().getColumn(2).setPreferredWidth(100);
-        table.getColumnModel().getColumn(2).setMaxWidth(100);
-        table.getColumnModel().getColumn(3).setMinWidth(100);
-        table.getColumnModel().getColumn(3).setPreferredWidth(100);
-        table.getColumnModel().getColumn(3).setMaxWidth(100);
-        */
 
 
         /*
@@ -248,9 +233,9 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 DefaultTableModel dtm = (DefaultTableModel) table.getModel();
                 int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
                 String[][] tableData = new String[nRow][nCol];
-                for (int i = 0 ; i < nRow ; i++)
-                    for (int j = 0 ; j < nCol ; j++)
-                        tableData[i][j] = String.valueOf(dtm.getValueAt(i,j));
+                for (int i = 0; i < nRow; i++)
+                    for (int j = 0; j < nCol; j++)
+                        tableData[i][j] = String.valueOf(dtm.getValueAt(i, j));
                 if (tableData[table.getSelectedRow()][0].startsWith("/")) {
                     cleanFileName = tableData[table.getSelectedRow()][0].replaceFirst("/", "");
                 } else {
@@ -358,9 +343,14 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                         "Choose",
                         JOptionPane.YES_NO_OPTION);
                 if (selectedOption == JOptionPane.YES_OPTION) {
-                    deleteFile(
-                            path + Const.hadoopSeparator + data[table.getSelectedRow()][0],
-                            Const.getHadoopFileSystem());
+                    try {
+                        deleteFile(
+                                path + Const.hadoopSeparator + data[table.getSelectedRow()][0],
+                                Const.getHadoopFileSystem());
+                    } catch (IOException e1) {
+                        logger.error(e1.getMessage());
+                        JOptionPane.showMessageDialog(null, e1.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
 
                 HadoopHdfsController.getHadoopData(GenScreen.this);
@@ -373,50 +363,49 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         uploadDirectory.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                JFileChooser jFileChooser = new JFileChooser();
+                // user can only choose a directory !
+                //jFileChooser.setCurrentDirectory(new java.io.File("."));
+                jFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                jFileChooser.showSaveDialog(null);
+                jFileChooser.setDialogTitle("Choose a directory to upload");
+
+
+                logger.info("Uploading a directory");
+                String filepath = jFileChooser.getSelectedFile().getAbsolutePath();
+                // this is the filepath user chooses
+                //String filepath = jFileChooser.getCurrentDirectory().toString();
+                // name of the file the user chose
+
+                logger.info("File path of the input folder/file " + filepath);
+
+                String filename = filepath.substring(filepath.lastIndexOf("/"), filepath.length());
+                FileSystem fs = Const.getHadoopFileSystem();
+
+
+                // @src -> @destination
+                //fs.copyFromLocalFile(false, true, new Path(filePath), new Path(homeDirectory + filename));
+
+                JDialog jDialog = new JDialog();
+                DefaultListModel model = new DefaultListModel();
+                JList list = new JList(model);
+                JScrollPane sp = new JScrollPane(list);
+                jDialog.add(sp, BorderLayout.CENTER);
+                jDialog.pack();
+                jDialog.setSize((int) (screenSizeWidth / 2.25), (int) (screenSizeHeight / 3));
+                jDialog.setLocationRelativeTo(null);
+                jDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                jDialog.setVisible(true);
+
+                File dir = new File(filepath);
+
                 try {
-
-                    JFileChooser jFileChooser = new JFileChooser();
-                    // user can only choose a directory !
-                    //jFileChooser.setCurrentDirectory(new java.io.File("."));
-                    jFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                    jFileChooser.showSaveDialog(null);
-                    jFileChooser.setDialogTitle("Choose a directory to upload");
-
-
-                    logger.info("Uploading a directory");
-                    String filepath = jFileChooser.getSelectedFile().getAbsolutePath();
-                    // this is the filepath user chooses
-                    //String filepath = jFileChooser.getCurrentDirectory().toString();
-                    // name of the file the user chose
-
-                    logger.info("File path of the input folder/file " + filepath);
-
-                    String filename = filepath.substring(filepath.lastIndexOf("/"), filepath.length());
-                    FileSystem fs = Const.getHadoopFileSystem();
-
-
-                    // @src -> @destination
-                    //fs.copyFromLocalFile(false, true, new Path(filePath), new Path(homeDirectory + filename));
-
-                    JDialog jDialog = new JDialog();
-                    DefaultListModel model = new DefaultListModel();
-                    JList list = new JList(model);
-                    JScrollPane sp = new JScrollPane(list);
-                    jDialog.add(sp, BorderLayout.CENTER);
-                    jDialog.pack();
-                    jDialog.setSize((int) (screenSizeWidth / 2.25), (int) (screenSizeHeight / 3));
-                    jDialog.setLocationRelativeTo(null);
-                    jDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-                    jDialog.setVisible(true);
-
-                    File dir = new File(filepath);
-
-                    //copyFilesToDir(dir.listFiles(), fs, homeDirectory + Const.hadoopSeparator + path  + filename, list);
                     HadoopHdfsController.copyFilesToDir(dir.listFiles(), fs, path + filename, list, GenScreen.this);
-                    HadoopHdfsController.getHadoopData(GenScreen.this);
-                } catch (Exception ex) {
-                    out.println(ex.getMessage());
+                } catch (IOException e1) {
+                    logger.error(e1.getMessage());
+                    JOptionPane.showMessageDialog(null, e1.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
+                HadoopHdfsController.getHadoopData(GenScreen.this);
             }
         });
 
@@ -426,17 +415,18 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
         createFolder.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                String filename = JOptionPane.showInputDialog(null,
+                        "How should the folder be called?", "Enter the folder name", JOptionPane.QUESTION_MESSAGE);
+                FileSystem fs = Const.getHadoopFileSystem();
+                logger.info("User wants to create a path " + path + Const.hadoopSeparator + filename);
                 try {
-                    String filename = JOptionPane.showInputDialog(null,
-                            "How should the folder be called?", "Enter the folder name", JOptionPane.QUESTION_MESSAGE);
-                    FileSystem fs = Const.getHadoopFileSystem();
-                    logger.info("User wants to create a path " + path + Const.hadoopSeparator + filename);
                     fs.mkdirs(new Path(path + Const.hadoopSeparator + filename));
-                    logger.info("Created a path " + path + Const.hadoopSeparator + filename);
-                    HadoopHdfsController.getHadoopData(GenScreen.this);
-                } catch (Exception ex) {
-                    out.println(ex.getMessage());
+                } catch (IOException e1) {
+                    logger.error(e1.getMessage());
+                    JOptionPane.showMessageDialog(null, e1.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
+                logger.info("Created a path " + path + Const.hadoopSeparator + filename);
+                HadoopHdfsController.getHadoopData(GenScreen.this);
             }
         });
 
@@ -447,38 +437,39 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
             public void actionPerformed(ActionEvent e) {
                 Configuration conf = new Configuration();
 
+
+                JFileChooser jFileChooser = new JFileChooser();
+                // user can only choose files !
+                jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                jFileChooser.setMultiSelectionEnabled(true);
+                jFileChooser.showOpenDialog(null);
+
+                File[] files = jFileChooser.getSelectedFiles();
+
+                FileSystem fs = Const.getHadoopFileSystem();
+
+                // @src -> @destination
+                //fs.copyFromLocalFile(false, true, new Path(filePath), new Path(homeDirectory + filename));
+
+                JDialog jDialog = new JDialog();
+                DefaultListModel model = new DefaultListModel();
+                JList list = new JList(model);
+                JScrollPane sp = new JScrollPane(list);
+                jDialog.add(sp, BorderLayout.CENTER);
+                jDialog.pack();
+                jDialog.setSize((int) (screenSizeWidth / 2.25), (int) (screenSizeHeight / 3));
+                jDialog.setLocationRelativeTo(null);
+                jDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                jDialog.setVisible(true);
+
                 try {
-
-                    JFileChooser jFileChooser = new JFileChooser();
-                    // user can only choose files !
-                    jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                    jFileChooser.setMultiSelectionEnabled(true);
-                    jFileChooser.showOpenDialog(null);
-
-                    File[] files = jFileChooser.getSelectedFiles();
-
-                    FileSystem fs = Const.getHadoopFileSystem();
-
-                    // @src -> @destination
-                    //fs.copyFromLocalFile(false, true, new Path(filePath), new Path(homeDirectory + filename));
-
-                    JDialog jDialog = new JDialog();
-                    DefaultListModel model = new DefaultListModel();
-                    JList list = new JList(model);
-                    JScrollPane sp = new JScrollPane(list);
-                    jDialog.add(sp, BorderLayout.CENTER);
-                    jDialog.pack();
-                    jDialog.setSize((int) (screenSizeWidth / 2.25), (int) (screenSizeHeight / 3));
-                    jDialog.setLocationRelativeTo(null);
-                    jDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-                    jDialog.setVisible(true);
-
                     HadoopHdfsController.copyFilesToDir(files, fs, path, list, GenScreen.this);
-
-                    HadoopHdfsController.getHadoopData(GenScreen.this);
-                } catch (Exception ex) {
-                    out.println(ex.getMessage());
+                } catch (IOException e1) {
+                    logger.error(e1.getMessage());
+                    JOptionPane.showMessageDialog(null, e1.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
+
+                HadoopHdfsController.getHadoopData(GenScreen.this);
             }
         });
 

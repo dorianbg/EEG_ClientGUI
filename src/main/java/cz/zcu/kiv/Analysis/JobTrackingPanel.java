@@ -189,10 +189,11 @@ public class JobTrackingPanel extends JPanel {
                     output2 = webResource2.get(ClientResponse.class).getEntity(String.class);
                     logger.info(output2);
                     jobStatusLabel.setText(output2);
+                    // this is a very harmless error, even if it happens it only means status will be checked quicker
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+
                     }
                 }
                 return null;

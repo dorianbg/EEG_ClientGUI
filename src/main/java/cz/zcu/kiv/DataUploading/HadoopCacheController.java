@@ -47,6 +47,7 @@ import java.util.prefs.Preferences;
  * HadoopCacheController, 2017/07/22 13:53 dbg
  *
  **********************************************************************************************************************/
+@Deprecated
 public class HadoopCacheController {
 
     private static Log logger = LogFactory.getLog(HadoopCacheController.class);
