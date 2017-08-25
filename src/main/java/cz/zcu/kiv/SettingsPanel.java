@@ -1,6 +1,5 @@
 package cz.zcu.kiv;
 
-import cz.zcu.kiv.Analysis.ConfigPanels.NeuralNetworkConfigScreen;
 import cz.zcu.kiv.DataUploading.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -141,7 +140,7 @@ public class SettingsPanel extends JPanel {
         jButton2.setPreferredSize(new Dimension(400, 60));
         jButton2.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
-                jFrameParent.setContentPane(new GenScreen(jFrameParent, path));
+                jFrameParent.setContentPane(new HadoopHdfsBrowser(jFrameParent, path));
                 JFrameSingleton.getMainScreen().invalidate();
                 JFrameSingleton.getMainScreen().validate();
             }

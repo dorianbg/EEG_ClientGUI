@@ -22,12 +22,10 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import static cz.zcu.kiv.Const.screenSizeHeight;
 import static cz.zcu.kiv.Const.screenSizeWidth;
 import static cz.zcu.kiv.DataUploading.HadoopHdfsController.deleteFile;
-import static java.lang.System.out;
 
 /***********************************************************************************************************************
  *
@@ -50,12 +48,12 @@ import static java.lang.System.out;
  *
  ***********************************************************************************************************************
  *
- * GenScreen, 2017/07/13 23:31 Dorian Beganovic
+ * HadoopHdfsBrowser, 2017/07/13 23:31 Dorian Beganovic
  *
  **********************************************************************************************************************/
-public class GenScreen extends JPanel implements ListSelectionListener, HadoopScreen {
+public class HadoopHdfsBrowser extends JPanel implements ListSelectionListener, HadoopScreen {
 
-    private static Log logger = LogFactory.getLog(GenScreen.class);
+    private static Log logger = LogFactory.getLog(HadoopHdfsBrowser.class);
 
     // parent screen (if double clicked)
     private JFrame jFrameParent;
@@ -70,7 +68,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
     // path which we want to analyze, in this case this is pretty fixed and mainly dependant on Constants
     private String path;
 
-    public GenScreen(JFrame jFrameParent, final String path) {
+    public HadoopHdfsBrowser(JFrame jFrameParent, final String path) {
         //use the borderlayout
         super(new BorderLayout());
 
@@ -92,7 +90,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
             @Override
             protected Void doInBackground() throws Exception {
                 logger.info("Getting hadoop data in background...");
-                HadoopHdfsController.getHadoopData(GenScreen.this);
+                HadoopHdfsController.getHadoopData(HadoopHdfsBrowser.this);
                 return null;
             }
         };
@@ -135,7 +133,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                     } else {
                         cleanFileName = data[table.getSelectedRow()][0];
                     }
-                    frame.add(new GenScreen(frame, cleanPath + Const.hadoopSeparator + cleanFileName));
+                    frame.add(new HadoopHdfsBrowser(frame, cleanPath + Const.hadoopSeparator + cleanFileName));
                     frame.setSize((int) screenSizeWidth / 2, (int) (screenSizeHeight * 3 / 4));
                     frame.setResizable(true);
                     frame.setLocationByPlatform(true);
@@ -167,7 +165,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 logger.info("Path is " + path);
                 String backPath = path.substring(0, path.lastIndexOf(Const.hadoopSeparator));
                 logger.info("Back path is " + backPath);
-                jFrameParent.setContentPane(new GenScreen(jFrameParent, backPath));
+                jFrameParent.setContentPane(new HadoopHdfsBrowser(jFrameParent, backPath));
                 jFrameParent.invalidate();
                 jFrameParent.validate();
             }
@@ -327,7 +325,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 logger.info("Clean file name " + cleanFileName);
                 logger.info("Clean new path " + cleanPath + Const.hadoopSeparator + cleanFileName);
                 // initialize the new screen with the new path
-                jFrameParent.setContentPane(new GenScreen(jFrameParent, cleanNewPath));
+                jFrameParent.setContentPane(new HadoopHdfsBrowser(jFrameParent, cleanNewPath));
                 jFrameParent.invalidate();
                 jFrameParent.validate();
             }
@@ -353,7 +351,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                     }
                 }
 
-                HadoopHdfsController.getHadoopData(GenScreen.this);
+                HadoopHdfsController.getHadoopData(HadoopHdfsBrowser.this);
             }
         });
 
@@ -400,12 +398,12 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 File dir = new File(filepath);
 
                 try {
-                    HadoopHdfsController.copyFilesToDir(dir.listFiles(), fs, path + filename, list, GenScreen.this);
+                    HadoopHdfsController.copyFilesToDir(dir.listFiles(), fs, path + filename, list, HadoopHdfsBrowser.this);
                 } catch (IOException e1) {
                     logger.error(e1.getMessage());
                     JOptionPane.showMessageDialog(null, e1.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
-                HadoopHdfsController.getHadoopData(GenScreen.this);
+                HadoopHdfsController.getHadoopData(HadoopHdfsBrowser.this);
             }
         });
 
@@ -426,7 +424,7 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                     JOptionPane.showMessageDialog(null, e1.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
                 logger.info("Created a path " + path + Const.hadoopSeparator + filename);
-                HadoopHdfsController.getHadoopData(GenScreen.this);
+                HadoopHdfsController.getHadoopData(HadoopHdfsBrowser.this);
             }
         });
 
@@ -463,13 +461,13 @@ public class GenScreen extends JPanel implements ListSelectionListener, HadoopSc
                 jDialog.setVisible(true);
 
                 try {
-                    HadoopHdfsController.copyFilesToDir(files, fs, path, list, GenScreen.this);
+                    HadoopHdfsController.copyFilesToDir(files, fs, path, list, HadoopHdfsBrowser.this);
                 } catch (IOException e1) {
                     logger.error(e1.getMessage());
                     JOptionPane.showMessageDialog(null, e1.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
 
-                HadoopHdfsController.getHadoopData(GenScreen.this);
+                HadoopHdfsController.getHadoopData(HadoopHdfsBrowser.this);
             }
         });
 

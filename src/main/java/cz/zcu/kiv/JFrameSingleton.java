@@ -1,6 +1,6 @@
 package cz.zcu.kiv;
 
-import cz.zcu.kiv.DataUploading.GenScreen;
+import cz.zcu.kiv.DataUploading.HadoopHdfsBrowser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -125,7 +125,7 @@ public class JFrameSingleton {
             3/4 of screen screenSizeHeight
              */
             logger.info("Starting the screen");
-            mainScreen.add(new GenScreen(getMainScreen(), Const.homeDirectory));
+            mainScreen.add(new HadoopHdfsBrowser(getMainScreen(), Const.homeDirectory));
             mainScreen.setSize((int) screenSizeWidth / 2, (int) (screenSizeHeight * 3 / 4));
             mainScreen.setResizable(true);
             mainScreen.setLocationByPlatform(true);
