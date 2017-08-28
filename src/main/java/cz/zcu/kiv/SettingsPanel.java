@@ -132,6 +132,10 @@ public class SettingsPanel extends JPanel {
 
                 Const.initializeValues();
                 Const.changeFileSystem();
+
+                jFrameParent.setContentPane(new HadoopHdfsBrowser(jFrameParent, path));
+                JFrameSingleton.getMainScreen().invalidate();
+                JFrameSingleton.getMainScreen().validate();
             }
         });
 
@@ -161,58 +165,6 @@ public class SettingsPanel extends JPanel {
         add(jButton, gbc);
         add(jButton2, gbc);
 
-        /*
-        // some old code, will maybe be removed
-        JButton updateCache = new JButton("UPDATE CACHE");
-        updateCache.setPreferredSize(new Dimension(400,60));
-        updateCache.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-
-                final JProgressBar progressBar;
-                progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 5000);
-
-                SwingWorker<Void,Void> swingWorker = new SwingWorker<Void, Void>() {
-                    @Override
-                    protected Void doInBackground() throws Exception {
-                        logger.info("Updating hadoop data ...");
-                        HadoopCacheController.cacheHadoopFilesIntoPreferences("/");
-                        HadoopCacheController.initializeHadoopCacheFromPreferences();
-                        return null;
-                    }
-
-                    @Override
-                    protected void done() {
-                        JOptionPane.showMessageDialog(null, "Done, please close these windows !");
-                    }
-                };
-
-                swingWorker.execute();
-
-                progressBar.setStringPainted(true);
-                //progressBar.setString("Updating Hadoop cache");
-                progressBar.setValue(0);
-                final Timer timer = new Timer(10, null);
-                timer.addActionListener(new ActionListener() {
-                    int counter = 0;
-
-                    public void actionPerformed(ActionEvent evt) {
-                        counter++;
-                        progressBar.setValue(counter);
-                        if (counter > 10) {
-                            timer.stop();
-                        }
-                    }
-                });
-                timer.start();
-                JOptionPane.showOptionDialog(null, progressBar, "Caching hadoop files", JOptionPane.DEFAULT_OPTION,
-                        JOptionPane.INFORMATION_MESSAGE, null, null, null);
-
-            };
-        });
-        add(updateCache,gbc);
-        */
 
     }
 }

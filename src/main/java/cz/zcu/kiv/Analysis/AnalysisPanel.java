@@ -408,20 +408,27 @@ public class AnalysisPanel extends JPanel {
                 frame.setResizable(true);
                 frame.setLocationByPlatform(true);
                 frame.setLocationRelativeTo(null);
-                frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                 frame.setVisible(true);
                 frame.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent windowEvent) {
                         // pop-up window with a question
-                        if (JOptionPane.showConfirmDialog(frame, "Are you you want to close this window? If a job is running it will be cancelled", "Closing", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
-                                == JOptionPane.YES_OPTION)
+                        if (client.resource(serverConnectionUri).path("/jobs/check/" + jobId).get(ClientResponse.class).getEntity(String.class).equals("RUNNING"))
                         {
-                            logger.info("Closing the window");
-                            WebResource webResource = client.resource(serverConnectionUri).path("/jobs/cancel/" + jobId);
-                            ClientResponse responseMsg = webResource.get(ClientResponse.class);  // you just change this call from post to get
-                            logger.info("Cancelled the job");
+                            if((JOptionPane.showConfirmDialog(frame, "Are you you want to close this window? If a job is running it will be cancelled", "Closing", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
+                                    == JOptionPane.YES_OPTION)){
+                                frame.dispose();
+                                logger.info("Closing the window");
+                                WebResource webResource = client.resource(serverConnectionUri).path("/jobs/cancel/" + jobId);
+                                ClientResponse responseMsg = webResource.get(ClientResponse.class);  // you just change this call from post to get
+                                logger.info("Cancelled the job");
+                            }
                         }
+                        if(client.resource(serverConnectionUri).path("/jobs/check/" + jobId).get(ClientResponse.class).getEntity(String.class).equals("FINISHED")){
+                            frame.dispose();
+                        }
+
                     }
                 });
             }

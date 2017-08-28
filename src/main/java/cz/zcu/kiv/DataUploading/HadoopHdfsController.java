@@ -145,10 +145,15 @@ public class HadoopHdfsController {
                 logger.info("Copying all the files from directory ");
                 for (File file : files) {
                     if (!file.getName().startsWith(".")) {
-                        logger.info("SRC: " + file.getPath());
-                        logger.info("DEST: " + destDirPath + Const.hadoopSeparator + file.getName());
-                        fs.copyFromLocalFile(new Path(file.getPath()), new Path(destDirPath, file.getName()));
-                        String text = "SRC: " + file.getPath() + " \n" + "DEST: " + destDirPath + Const.hadoopSeparator + file.getName();
+                        String sourcePath = file.getPath();
+                        String destinationPath = destDirPath + Const.hadoopSeparator + file.getName();
+
+                        logger.info("Copying files, SRC: " + sourcePath);
+                        logger.info("Copying files, DEST: " + destinationPath);
+
+                        fs.copyFromLocalFile(new Path(sourcePath), new Path(destinationPath));
+                        String text = "SRC: " + sourcePath + " \n" + "DEST: " + destinationPath;
+
                         publish(text);
                     }
                 }

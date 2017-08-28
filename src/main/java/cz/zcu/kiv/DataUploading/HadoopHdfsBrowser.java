@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static cz.zcu.kiv.Const.getHadoopFileSystem;
 import static cz.zcu.kiv.Const.screenSizeHeight;
 import static cz.zcu.kiv.Const.screenSizeWidth;
 import static cz.zcu.kiv.DataUploading.HadoopHdfsController.deleteFile;
@@ -133,23 +134,34 @@ public class HadoopHdfsBrowser extends JPanel implements ListSelectionListener, 
                     } else {
                         cleanFileName = data[table.getSelectedRow()][0];
                     }
-                    frame.add(new HadoopHdfsBrowser(frame, cleanPath + Const.hadoopSeparator + cleanFileName));
-                    frame.setSize((int) screenSizeWidth / 2, (int) (screenSizeHeight * 3 / 4));
-                    frame.setResizable(true);
-                    frame.setLocationByPlatform(true);
-                    frame.setLocationRelativeTo(null);
-                    frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                    frame.setVisible(true);
-                    // set the escape button
-                    KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
-                    Action escapeAction = new AbstractAction() {
-                        // close the frame when the user presses escape
-                        public void actionPerformed(ActionEvent e) {
-                            frame.dispose();
+                    String cleanNewPath = cleanPath + Const.hadoopSeparator + cleanFileName;
+
+                    try {
+                        if(getHadoopFileSystem().isDirectory(new Path(cleanNewPath))){
+                            // initialize the new screen with the new path
+                            frame.add(new HadoopHdfsBrowser(frame, cleanNewPath));
+                            frame.setSize((int) screenSizeWidth / 2, (int) (screenSizeHeight * 3 / 4));
+                            frame.setResizable(true);
+                            frame.setLocationByPlatform(true);
+                            frame.setLocation(jFrameParent.getX()+20,jFrameParent.getY()+20);
+                            frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                            frame.setVisible(true);
+                            // set the escape button
+                            KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false);
+                            Action escapeAction = new AbstractAction() {
+                                // close the frame when the user presses escape
+                                public void actionPerformed(ActionEvent e) {
+                                    frame.dispose();
+                                }
+                            };
+                            frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
+                            frame.getRootPane().getActionMap().put("ESCAPE", escapeAction);
                         }
-                    };
-                    frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
-                    frame.getRootPane().getActionMap().put("ESCAPE", escapeAction);
+                    } catch (IOException e1) {
+                        logger.error(e1.getMessage());
+                    }
+
+
                 }
             }
         });
@@ -164,6 +176,9 @@ public class HadoopHdfsBrowser extends JPanel implements ListSelectionListener, 
             public void actionPerformed(ActionEvent e) {
                 logger.info("Path is " + path);
                 String backPath = path.substring(0, path.lastIndexOf(Const.hadoopSeparator));
+                if(backPath.length()==0){
+                    backPath="/";
+                }
                 logger.info("Back path is " + backPath);
                 jFrameParent.setContentPane(new HadoopHdfsBrowser(jFrameParent, backPath));
                 jFrameParent.invalidate();
@@ -314,20 +329,33 @@ public class HadoopHdfsBrowser extends JPanel implements ListSelectionListener, 
                 }
                 // isolate the filename from the path
                 String cleanFileName = "";
-                if (data[table.getSelectedRow()][0].startsWith("/")) {
-                    cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/", "");
-                } else {
-                    cleanFileName = data[table.getSelectedRow()][0];
+                try {
+                    if (data[table.getSelectedRow()][0].startsWith("/")) {
+                        cleanFileName = data[table.getSelectedRow()][0].replaceFirst("/", "");
+                    } else {
+                        cleanFileName = data[table.getSelectedRow()][0];
+                    }
                 }
+                catch (ArrayIndexOutOfBoundsException e2){
+                    cleanFileName = "";
+                }
+
                 // create the "clean" path value
                 String cleanNewPath = cleanPath + Const.hadoopSeparator + cleanFileName;
                 logger.info("Clean path " + path);
                 logger.info("Clean file name " + cleanFileName);
                 logger.info("Clean new path " + cleanPath + Const.hadoopSeparator + cleanFileName);
-                // initialize the new screen with the new path
-                jFrameParent.setContentPane(new HadoopHdfsBrowser(jFrameParent, cleanNewPath));
-                jFrameParent.invalidate();
-                jFrameParent.validate();
+
+                try {
+                    if(getHadoopFileSystem().isDirectory(new Path(cleanNewPath))){
+                        // initialize the new screen with the new path
+                        jFrameParent.setContentPane(new HadoopHdfsBrowser(jFrameParent, cleanNewPath));
+                        jFrameParent.invalidate();
+                        jFrameParent.validate();
+                    }
+                } catch (IOException e1) {
+                    logger.error(e1.getMessage());
+                }
             }
         });
 
@@ -567,10 +595,10 @@ public class HadoopHdfsBrowser extends JPanel implements ListSelectionListener, 
         jMenu1.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
-                if (mouseEvent.getClickCount() == 2) {
-                    JFrameSingleton.getMainScreen().setContentPane(new SettingsPanel(jFrameParent, path));
-                    JFrameSingleton.getMainScreen().invalidate();
-                    JFrameSingleton.getMainScreen().validate();
+                if (mouseEvent.getClickCount() == 1) {
+                    jFrameParent.setContentPane(new SettingsPanel((JFrame) SwingUtilities.getWindowAncestor(HadoopHdfsBrowser.this), path));
+                    jFrameParent.invalidate();
+                    jFrameParent.validate();
                 }
             }
         });
