@@ -46,7 +46,7 @@ public class JobTrackingPanel extends JPanel {
     private int jobId;
     private JTextArea jobStatusLabel;
     private JTextArea jobResult;
-    private boolean finished = false;
+    private boolean canceled = false;
 
     public JobTrackingPanel(Client client, int jobId, Map<String,String> queryParams){
         this.client = client;
@@ -202,13 +202,14 @@ public class JobTrackingPanel extends JPanel {
 
             @Override
             protected void done() {
-                finished = true;
-                WebResource webResource3 = client.resource(serverConnectionUri).path("/jobs/result/" + jobId);
-                logger.info(webResource3);
-                String output3 = webResource3.get(ClientResponse.class).getEntity(String.class);
-                logger.info(output3);
-                jobResult.setText(output3 + "\n                                                                                                                        \n");
-                JOptionPane.showMessageDialog(JobTrackingPanel.this,"Job " + jobId + " is done");
+                if(!canceled){
+                    WebResource webResource3 = client.resource(serverConnectionUri).path("/jobs/result/" + jobId);
+                    logger.info(webResource3);
+                    String output3 = webResource3.get(ClientResponse.class).getEntity(String.class);
+                    logger.info(output3);
+                    jobResult.setText(output3 + "\n                                                                                                                        \n");
+                    JOptionPane.showMessageDialog(JobTrackingPanel.this,"Job " + jobId + " is done");
+                }
             }
         };
         swingWorker.execute();
@@ -225,5 +226,9 @@ public class JobTrackingPanel extends JPanel {
             params.append("\n");
         }
         return params.toString();
+    }
+
+    public void setCanceled() {
+        this.canceled = true;
     }
 }

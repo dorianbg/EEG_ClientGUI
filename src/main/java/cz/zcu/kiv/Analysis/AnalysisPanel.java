@@ -420,6 +420,7 @@ public class AnalysisPanel extends JPanel {
                                     == JOptionPane.YES_OPTION)){
                                 frame.dispose();
                                 logger.info("Closing the window");
+                                panel.setCanceled();
                                 WebResource webResource = client.resource(serverConnectionUri).path("/jobs/cancel/" + jobId);
                                 ClientResponse responseMsg = webResource.get(ClientResponse.class);  // you just change this call from post to get
                                 logger.info("Cancelled the job");
