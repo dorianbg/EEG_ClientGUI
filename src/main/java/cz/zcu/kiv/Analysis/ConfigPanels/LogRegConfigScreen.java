@@ -128,6 +128,7 @@ public class LogRegConfigScreen extends JPanel {
                     config.put("config_step_size", config_step_size);
                     config.put("config_num_iterations", config_num_iterations);
                     config.put("config_mini_batch_fraction", config_mini_batch_fraction);
+                    ((JFrame) SwingUtilities.getWindowAncestor(LogRegConfigScreen.this)).dispose();
                 }
             }
         });

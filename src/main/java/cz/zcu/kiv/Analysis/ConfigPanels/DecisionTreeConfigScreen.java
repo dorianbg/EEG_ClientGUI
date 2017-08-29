@@ -133,6 +133,7 @@ public class DecisionTreeConfigScreen extends JPanel {
                     config.put("config_max_bins", maxBins);
                     config.put("config_min_instances_per_node", minInstancesPerNode);
                     config.put("config_impurity", impurity);
+                    ((JFrame) SwingUtilities.getWindowAncestor(DecisionTreeConfigScreen.this)).dispose();
                 }
 
             }

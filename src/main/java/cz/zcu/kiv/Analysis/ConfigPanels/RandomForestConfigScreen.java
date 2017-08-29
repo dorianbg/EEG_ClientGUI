@@ -171,6 +171,7 @@ public class RandomForestConfigScreen extends JPanel {
                     config.put("config_impurity", impurity);
                     config.put("config_num_trees", numTrees);
                     config.put("config_feature_subset", featureSubset);
+                    ((JFrame) SwingUtilities.getWindowAncestor(RandomForestConfigScreen.this)).dispose();
                 }
             }
         });

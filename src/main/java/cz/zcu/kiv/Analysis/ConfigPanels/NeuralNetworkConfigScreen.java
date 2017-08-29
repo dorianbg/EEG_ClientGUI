@@ -318,6 +318,7 @@ public class NeuralNetworkConfigScreen extends JPanel {
                             config.putAll(((NeuralNetworkLayerPanel) jPanel).getConfig());
                         }
                     }
+                    ((JFrame) SwingUtilities.getWindowAncestor(NeuralNetworkConfigScreen.this)).dispose();
                 }
             }
         });

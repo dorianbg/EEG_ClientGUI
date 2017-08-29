@@ -155,6 +155,7 @@ public class SVMConfigScreen extends JPanel {
                     config.put("config_num_iterations", config_num_iterations);
                     config.put("config_reg_param", config_reg_param);
                     config.put("config_mini_batch_fraction", config_mini_batch_fraction);
+                    ((JFrame) SwingUtilities.getWindowAncestor(SVMConfigScreen.this)).dispose();
                 }
             }
         });
